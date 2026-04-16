@@ -969,7 +969,7 @@ export default function Demo() {
                       background: freeChangeMode ? '#c9a961' : undefined,
                       color: freeChangeMode ? '#1a1812' : undefined,
                     }}
-                  >{freeChangeMode ? '退出改造' : `改造(${freeChanges})`}</button>
+                  >{freeChangeMode ? '退出改造' : `改造地形(${freeChanges})`}</button>
                   <button onClick={handleUndo} disabled={mapHistory.length === 0} style={{ ...btn(mapHistory.length === 0), fontSize: 16, padding: '4px 8px' }}>撤回</button>
                 </div>
               </div>
@@ -1072,8 +1072,8 @@ export default function Demo() {
                 </div>
               )}
               <div style={{ flexShrink: 0, borderTop: '1px solid #3d3524', marginTop: 'auto', paddingTop: 8, fontSize: 14, color: '#9c8f72', fontWeight: 600, lineHeight: 1.8 }}>
-                <div>鼠标右键旋转地形卡</div>
-                <div>点击卡片右上角 ⟳ 标记不想要的卡，可重新抽取</div>
+                <div>· 鼠标右键旋转地形卡</div>
+                <div>· 点击卡片右上角 ⟳ 标记不想要的卡，可重新抽取</div>
               </div>
             </div>
 
@@ -1204,7 +1204,7 @@ export default function Demo() {
                 <span>II = 中级地形</span>
                 <span>III = 高级地形</span>
                 <span>3格同类相连可升级1格</span>
-                <span>⚡ 气候冲突</span>
+                <span>⚡ 气候冲突：相邻气候差≥2档断开相连，无法升级</span>
               </div>
             </div>
 
