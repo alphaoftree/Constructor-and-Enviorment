@@ -833,11 +833,11 @@ export default function Demo() {
             <button onClick={() => setShowShop(!showShop)} style={{ ...btn(false), fontSize: 14 }}>
               {showShop ? '关闭商店' : '商店'}
             </button>
-          <div style={{ display: 'flex', gap: 16, fontSize: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, fontSize: 16, flexWrap: 'wrap', minWidth: 520 }}>
             {Object.entries(resources).map(([k, v]) => {
               const delta = netChange[k] || 0;
               return (
-                <div key={k}>
+                <div key={k} style={{ minWidth: 70 }}>
                   <span style={{ color: '#9c8f72', marginRight: 4 }}>{k}</span>
                   <span style={{ color: v < 0 ? '#c25a3a' : '#c9a961', fontWeight: 600 }}>{v}</span>
                   <span style={{
@@ -850,7 +850,7 @@ export default function Demo() {
               );
             })}
           </div>
-          <div style={{ width: 1, height: 24, background: '#3d3524', margin: '0 4px' }} />
+          <div style={{ width: 1, height: 24, background: '#3d3524', marginLeft: 8 }} />
           <div style={{ color: '#9c8f72', fontSize: 16, letterSpacing: 1 }}>智慧等级</div>
           {['粗浅', '严肃', '深刻'].map(level => {
             const needs = POP_NEEDS[level];
@@ -1202,12 +1202,12 @@ export default function Demo() {
                 <div style={{ fontSize: 13, color: '#9c8f72', fontWeight: 600, marginBottom: 2 }}>启迪智慧</div>
                 <button onClick={() => handleEnlighten('粗浅', '严肃', 10)}
                   disabled={(population.粗浅 - popUsage.粗浅) < 10}
-                  style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 13, padding: '5px 10px' }}>
+                  style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 13, padding: '5px 10px', width: 160, textAlign: 'center' }}>
                   粗浅→严肃(10→5)
                 </button>
                 <button onClick={() => handleEnlighten('严肃', '深刻', 6)}
                   disabled={(population.严肃 - popUsage.严肃) < 6}
-                  style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 13, padding: '5px 10px' }}>
+                  style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 13, padding: '5px 10px', width: 160, textAlign: 'center' }}>
                   严肃→深刻(6→3)
                 </button>
                 <div style={{ height: 12 }} />
