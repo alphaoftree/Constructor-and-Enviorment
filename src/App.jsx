@@ -653,6 +653,7 @@ export default function Demo() {
     setPopulation(newPop);
     setResources(newResources);
     setTurn(turn + 1);
+    setMapHistory([]);
     // 每回合重roll全部手牌+重置自由改造
     setHand(generateHand());
     setFreeChanges(3);
