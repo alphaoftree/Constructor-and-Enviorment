@@ -795,20 +795,44 @@ export default function Demo() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Noto+Serif+SC:wght@400;500;600&display=swap');`}</style>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, marginBottom: 6 }}>
-          <span style={{ color: '#c9a961', fontSize: 16, fontWeight: 600, fontFamily: "'Noto Serif SC', serif" }}>
-            建设与环境 · <span style={{ color: '#9c8f72' }}>回合 {turn}</span>
-          </span>
-        </div>
         <div style={{
-          display: 'flex', alignItems: 'center',
+          display: 'flex', flexDirection: 'column',
           padding: '8px 16px', background: '#242017',
-          border: '1px solid #3d3524', marginBottom: 12, flexWrap: 'wrap', gap: 10,
+          border: '1px solid #3d3524', marginBottom: 12, gap: 6,
           flexShrink: 0,
         }}>
-          <button onClick={() => setShowShop(!showShop)} style={{ ...btn(false), fontSize: 14 }}>
-            {showShop ? '关闭商店' : '商店'}
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#c9a961', fontSize: 16, fontWeight: 600, fontFamily: "'Noto Serif SC', serif" }}>
+              建设与环境 · <span style={{ color: '#9c8f72' }}>回合 {turn}</span>
+            </span>
+            <button onClick={() => {
+              setMap(makeInitialMap());
+              setMapHistory([]);
+              setHand(generateHand());
+              setSelectedCardId(null);
+              setRotation(0);
+              setSelectedCityId('A');
+              setCityBuildings({ A: [], B: [], C: [], D: [], E: [], F: [] });
+              setResources({ 粮食: 100, 木材: 100, 铁: 150, 药草: 150, 鱼获: 150, 肉食: 150 });
+              setPopulation({ 粗浅: 40, 严肃: 0, 深刻: 0 });
+              setTurn(1);
+              setUnmetTurns({ 粗浅: 0, 严肃: 0, 深刻: 0 });
+              setUpgradeMode(false);
+              setActiveRegion(null);
+              setUpgradeSelections([]);
+              setFreeChanges(3);
+              setFreeChangeMode(false);
+              setFreeChangePicking(null);
+              setRerollsLeft(2);
+              setRerollSelected(new Set());
+              setHoverCell(null);
+              addLog('━ 新局开始');
+            }} style={{ ...btn(false), fontSize: 14 }}>重新开始</button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <button onClick={() => setShowShop(!showShop)} style={{ ...btn(false), fontSize: 14 }}>
+              {showShop ? '关闭商店' : '商店'}
+            </button>
           <div style={{ display: 'flex', gap: 16, fontSize: 16, flexWrap: 'wrap' }}>
             {Object.entries(resources).map(([k, v]) => {
               const delta = netChange[k] || 0;
@@ -848,30 +872,7 @@ export default function Demo() {
               </div>
             );
           })}
-          <div style={{ flex: 1 }} />
-          <button onClick={() => {
-            setMap(makeInitialMap());
-            setMapHistory([]);
-            setHand(generateHand());
-            setSelectedCardId(null);
-            setRotation(0);
-            setSelectedCityId('A');
-            setCityBuildings({ A: [], B: [], C: [], D: [], E: [], F: [] });
-            setResources({ 粮食: 100, 木材: 100, 铁: 150, 药草: 150, 鱼获: 150, 肉食: 150 });
-            setPopulation({ 粗浅: 40, 严肃: 0, 深刻: 0 });
-            setTurn(1);
-            setUnmetTurns({ 粗浅: 0, 严肃: 0, 深刻: 0 });
-            setUpgradeMode(false);
-            setActiveRegion(null);
-            setUpgradeSelections([]);
-            setFreeChanges(3);
-            setFreeChangeMode(false);
-            setFreeChangePicking(null);
-            setRerollsLeft(2);
-            setRerollSelected(new Set());
-            setHoverCell(null);
-            addLog('━ 新局开始');
-          }} style={{ ...btn(false), fontSize: 14 }}>重新开始</button>
+          </div>
         </div>
 
         {showShop && (
@@ -1210,7 +1211,7 @@ export default function Demo() {
                   严肃→深刻(6→3)
                 </button>
                 <div style={{ height: 12 }} />
-                <button onClick={handleNextTurn} style={{ ...primaryBtn, fontSize: 16, padding: '10px 28px', width: '100%' }}>下一回合 ▶</button>
+                <button onClick={handleNextTurn} style={{ ...primaryBtn, fontSize: 16, padding: '12px 48px', width: '100%' }}>下一回合 ▶</button>
               </div>
             </div>
 
