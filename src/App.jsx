@@ -1108,7 +1108,7 @@ export default function Demo() {
                     // Tooltip内容
                     let tooltip = '';
                     if (city) {
-                      tooltip = `${city.id} ${city.name}（城市中心，不可被覆盖，视为万能地形连接器）`;
+                      tooltip = `${city.name}（城市中心，不可被覆盖，视为万能地形连接器）`;
                     } else {
                       const tierName = t.tier === 1 ? '基础' : t.tier === 2 ? '中级II' : t.tier === 3 ? '高级III' : '';
                       tooltip = `${t.name}${tierName ? `（${tierName}）` : ''}`;
@@ -1172,9 +1172,10 @@ export default function Demo() {
                           <div style={{
                             position: 'absolute', inset: 0, display: 'flex',
                             alignItems: 'center', justifyContent: 'center',
-                            fontFamily: "'Cinzel', serif", fontWeight: 600, fontSize: 16,
+                            fontFamily: "'Noto Serif SC', serif", fontWeight: 600, fontSize: 11,
                             color: '#1a1812', background: 'rgba(201, 169, 97, 0.9)',
-                          }}>{city.id}</div>
+                            lineHeight: 1.1, textAlign: 'center', padding: 1,
+                          }}>{city.name}</div>
                         )}
                         {hasConflict && !city && (
                           <div style={{
@@ -1205,7 +1206,7 @@ export default function Demo() {
               <>
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: 16, color: '#c9a961', marginBottom: 6, letterSpacing: 1, fontWeight: 600 }}>
-                    {currentCityStatus.id} {currentCityStatus.name} · 辖区地形
+                    {currentCityStatus.name} · 辖区地形
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                     {Object.entries(currentCityStatus.terrainValues).length === 0 ? (
