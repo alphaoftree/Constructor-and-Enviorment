@@ -878,37 +878,46 @@ export default function Demo() {
 
         {showShop && (
           <div style={{
-            background: '#242017', padding: 16, border: '1px solid #3d3524',
-            marginBottom: 16,
-          }}>
-            <h3 style={{ ...h3Style, marginBottom: 12 }}>商店 · 3换1</h3>
-            <div style={{ fontSize: 16, color: '#9c8f72', marginBottom: 12 }}>
-              点击"资源A → 资源B"进行交易：消耗3个A，换1个B
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-              {['粮食', '木材', '铁', '药草', '鱼获', '肉食'].map(fromRes => (
-                <div key={fromRes} style={{ background: '#1a1812', padding: 8 }}>
-                  <div style={{ fontSize: 16, color: '#c9a961', marginBottom: 6, fontWeight: 600 }}>
-                    卖 {fromRes}
-                    <span style={{ color: '#9c8f72', marginLeft: 4, fontWeight: 400 }}>
-                      ({resources[fromRes] || 0})
-                    </span>
+            position: 'fixed', inset: 0, zIndex: 100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.6)',
+          }} onClick={() => setShowShop(false)}>
+            <div style={{
+              background: '#242017', padding: 24, border: '1px solid #3d3524',
+              maxWidth: 800, width: '90%',
+            }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={h3Style}>商店 · 3换1</h3>
+                <button onClick={() => setShowShop(false)} style={{ ...btn(false), padding: '4px 12px' }}>✕</button>
+              </div>
+              <div style={{ fontSize: 16, color: '#9c8f72', marginBottom: 12 }}>
+                点击"资源A → 资源B"进行交易：消耗3个A，换1个B
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
+                {['粮食', '木材', '铁', '药草', '鱼获', '肉食'].map(fromRes => (
+                  <div key={fromRes} style={{ background: '#1a1812', padding: 8 }}>
+                    <div style={{ fontSize: 16, color: '#c9a961', marginBottom: 6, fontWeight: 600 }}>
+                      卖 {fromRes}
+                      <span style={{ color: '#9c8f72', marginLeft: 4, fontWeight: 400 }}>
+                        ({resources[fromRes] || 0})
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {['粮食', '木材', '铁', '药草', '鱼获', '肉食'].filter(r => r !== fromRes).map(toRes => (
+                        <button key={toRes}
+                          onClick={() => handleTrade(fromRes, toRes)}
+                          disabled={(resources[fromRes] || 0) < 3}
+                          style={{
+                            ...btn((resources[fromRes] || 0) < 3),
+                            fontSize: 16, padding: '2px 4px', textAlign: 'left'
+                          }}>
+                          → {toRes}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {['粮食', '木材', '铁', '药草', '鱼获', '肉食'].filter(r => r !== fromRes).map(toRes => (
-                      <button key={toRes}
-                        onClick={() => handleTrade(fromRes, toRes)}
-                        disabled={(resources[fromRes] || 0) < 3}
-                        style={{
-                          ...btn((resources[fromRes] || 0) < 3),
-                          fontSize: 16, padding: '2px 4px', textAlign: 'left'
-                        }}>
-                        → {toRes}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -1060,7 +1069,7 @@ export default function Demo() {
 
             <div style={{ ...panel, marginTop: 8, flexShrink: 0, maxHeight: '30%' }}>
               <h3 style={h3Style}>日志</h3>
-              <div style={{ fontSize: 16, maxHeight: 160, overflowY: 'auto', marginTop: 6 }}>
+              <div style={{ fontSize: 12, maxHeight: 160, overflowY: 'auto', marginTop: 6 }}>
                 {log.map((l, i) => (
                   <div key={i} style={{ color: i === 0 ? '#e8dfc8' : '#9c8f72', padding: '2px 0' }}>{l}</div>
                 ))}
@@ -1139,6 +1148,7 @@ export default function Demo() {
                           if (selectedCard) setRotation((rotation + 1) % 4);
                         }}
                         onClick={() => {
+                          if (city) { setSelectedCityId(city.id); return; }
                           if (upgradeMode) handleUpgradeClick(x, y);
                           else if (freeChangeMode && freeChanges > 0) handleFreeChangeClick(x, y);
                           else if (canPlace) handlePlace();
@@ -1147,7 +1157,7 @@ export default function Demo() {
                           background: isPreview ? TERRAIN[prev].color : t.color,
                           border: borderStyle,
                           position: 'relative',
-                          cursor: upgradeMode ? (canUpgradeHere ? 'pointer' : 'default') : freeChangeMode ? 'crosshair' : selectedCard ? 'pointer' : 'default',
+                          cursor: city ? 'pointer' : upgradeMode ? (canUpgradeHere ? 'pointer' : 'default') : freeChangeMode ? 'crosshair' : selectedCard ? 'pointer' : 'default',
                           aspectRatio: '1',
                           opacity: isPreview ? 0.85 : (upgradeMode && !inActiveRegion && !canUpgradeHere && !city) ? 0.4 : 1,
                         }}
@@ -1191,30 +1201,11 @@ export default function Demo() {
 
           {/* 右栏：城市面板 */}
           <div style={{ ...panel, overflowY: 'auto' }}>
-            <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap' }}>
-              {CITIES.map(city => (
-                <button key={city.id}
-                  onClick={() => setSelectedCityId(city.id)}
-                  style={{
-                    flex: '1 1 30%',
-                    padding: '8px 4px',
-                    background: selectedCityId === city.id ? '#c9a961' : '#2b2619',
-                    color: selectedCityId === city.id ? '#1a1812' : '#c9a961',
-                    border: '1px solid #3d3524',
-                    cursor: 'pointer',
-                    fontFamily: "'Noto Serif SC', serif",
-                    fontSize: 16,
-                    fontWeight: 600,
-                  }}
-                >{city.id} {city.name}</button>
-              ))}
-            </div>
-
             {currentCityStatus && (
               <>
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 16, color: '#9c8f72', marginBottom: 6, letterSpacing: 1 }}>
-                    辖区地形 · 3×3 · 统计每种地形的格子数
+                  <div style={{ fontSize: 16, color: '#c9a961', marginBottom: 6, letterSpacing: 1, fontWeight: 600 }}>
+                    {currentCityStatus.id} {currentCityStatus.name} · 辖区地形
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                     {Object.entries(currentCityStatus.terrainValues).length === 0 ? (
