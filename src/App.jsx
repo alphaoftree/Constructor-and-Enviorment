@@ -797,7 +797,7 @@ export default function Demo() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, marginBottom: 6 }}>
           <span style={{ color: '#c9a961', fontSize: 16, fontWeight: 600, fontFamily: "'Noto Serif SC', serif" }}>
-            建设系统Demo · <span style={{ color: '#9c8f72' }}>回合 {turn}</span>
+            建设与环境 · <span style={{ color: '#9c8f72' }}>回合 {turn}</span>
           </span>
         </div>
         <div style={{
