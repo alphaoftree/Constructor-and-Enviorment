@@ -833,11 +833,11 @@ export default function Demo() {
             <button onClick={() => setShowShop(!showShop)} style={{ ...btn(false), fontSize: 14 }}>
               {showShop ? '关闭商店' : '商店'}
             </button>
-          <div style={{ display: 'flex', gap: 12, fontSize: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, width: 650 }}>
             {Object.entries(resources).map(([k, v]) => {
               const delta = netChange[k] || 0;
               return (
-                <div key={k} style={{ width: 100 }}>
+                <div key={k}>
                   <span style={{ color: '#9c8f72', marginRight: 4 }}>{k}</span>
                   <span style={{ color: v < 0 ? '#c25a3a' : '#c9a961', fontWeight: 600 }}>{v}</span>
                   <span style={{
