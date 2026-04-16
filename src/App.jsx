@@ -782,18 +782,20 @@ export default function Demo() {
     <div style={{
       background: '#1a1812', color: '#e8dfc8',
       fontFamily: "'Noto Serif SC', 'Songti SC', serif",
-      minHeight: '100vh', padding: '20px',
+      height: '100vh', padding: '12px 16px',
+      overflow: 'hidden', display: 'flex', flexDirection: 'column',
     }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Noto+Serif+SC:wght@400;500;600&display=swap');`}</style>
 
-      <div style={{ maxWidth: 1500, margin: '0 auto' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '12px 16px', background: '#242017',
-          border: '1px solid #3d3524', marginBottom: 16, flexWrap: 'wrap', gap: 12,
+          padding: '8px 16px', background: '#242017',
+          border: '1px solid #3d3524', marginBottom: 12, flexWrap: 'wrap', gap: 10,
+          flexShrink: 0,
         }}>
-          <div style={{ display: 'flex', gap: 12, fontSize: 13, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ color: '#9c8f72', fontSize: 11, letterSpacing: 1 }}>信众</div>
+          <div style={{ display: 'flex', gap: 12, fontSize: 15, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ color: '#9c8f72', fontSize: 13, letterSpacing: 1 }}>信众</div>
             {['粗浅', '严肃', '深刻'].map(level => {
               const needs = POP_NEEDS[level];
               const needStr = Object.entries(needs).map(([r, a]) => `${r}×${a}`).join(' ');
@@ -805,27 +807,27 @@ export default function Demo() {
                     <span style={{ color: '#9c8f72', marginRight: 4 }}>{level}</span>
                     <span style={{ color: '#c9a961', fontWeight: 600 }}>{used}/{total}</span>
                     {unmetTurns[level] > 0 && (
-                      <span style={{ color: '#c25a3a', fontSize: 10, marginLeft: 3 }}>
+                      <span style={{ color: '#c25a3a', fontSize: 12, marginLeft: 3 }}>
                         ({unmetTurns[level]}/3断供)
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 9, color: '#5a5140' }}>需求：{needStr}</div>
+                  <div style={{ fontSize: 11, color: '#5a5140' }}>需求：{needStr}</div>
                 </div>
               );
             })}
             <button onClick={() => handleEnlighten('粗浅', '严肃', 10)}
               disabled={(population.粗浅 - popUsage.粗浅) < 10}
-              style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 11, padding: '4px 8px' }}>
+              style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 13, padding: '4px 8px' }}>
               启示·粗浅→严肃(10→5)
             </button>
             <button onClick={() => handleEnlighten('严肃', '深刻', 6)}
               disabled={(population.严肃 - popUsage.严肃) < 6}
-              style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 11, padding: '4px 8px' }}>
+              style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 13, padding: '4px 8px' }}>
               启示·严肃→深刻(6→3)
             </button>
           </div>
-          <div style={{ display: 'flex', gap: 16, fontSize: 13, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, fontSize: 15, flexWrap: 'wrap' }}>
             {Object.entries(resources).map(([k, v]) => {
               const delta = netChange[k] || 0;
               return (
@@ -833,7 +835,7 @@ export default function Demo() {
                   <span style={{ color: '#9c8f72', marginRight: 4 }}>{k}</span>
                   <span style={{ color: v < 0 ? '#c25a3a' : '#c9a961', fontWeight: 600 }}>{v}</span>
                   <span style={{
-                    marginLeft: 4, fontSize: 11,
+                    marginLeft: 4, fontSize: 13,
                     color: delta > 0 ? '#7a9a4f' : delta < 0 ? '#c25a3a' : '#5a5140'
                   }}>
                     ({delta > 0 ? '+' : ''}{delta})
@@ -843,8 +845,8 @@ export default function Demo() {
             })}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ color: '#9c8f72', fontSize: 13 }}>回合 {turn}</span>
-            <button onClick={() => setShowShop(!showShop)} style={{ ...btn(false), fontSize: 12 }}>
+            <span style={{ color: '#9c8f72', fontSize: 15 }}>回合 {turn}</span>
+            <button onClick={() => setShowShop(!showShop)} style={{ ...btn(false), fontSize: 14 }}>
               {showShop ? '关闭商店' : '商店'}
             </button>
             <button onClick={() => {
@@ -869,7 +871,7 @@ export default function Demo() {
               setRerollSelected(new Set());
               setHoverCell(null);
               addLog('━ 新局开始');
-            }} style={{ ...btn(false), fontSize: 12 }}>重开</button>
+            }} style={{ ...btn(false), fontSize: 14 }}>重开</button>
             <button onClick={handleNextTurn} style={primaryBtn}>下一回合 ▶</button>
           </div>
         </div>
@@ -880,13 +882,13 @@ export default function Demo() {
             marginBottom: 16,
           }}>
             <h3 style={{ ...h3Style, marginBottom: 12 }}>商店 · 3换1</h3>
-            <div style={{ fontSize: 11, color: '#9c8f72', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, color: '#9c8f72', marginBottom: 12 }}>
               点击"资源A → 资源B"进行交易：消耗3个A，换1个B
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
               {['粮食', '木材', '铁', '药草', '鱼获', '肉食'].map(fromRes => (
                 <div key={fromRes} style={{ background: '#1a1812', padding: 8 }}>
-                  <div style={{ fontSize: 11, color: '#c9a961', marginBottom: 6, fontWeight: 600 }}>
+                  <div style={{ fontSize: 13, color: '#c9a961', marginBottom: 6, fontWeight: 600 }}>
                     卖 {fromRes}
                     <span style={{ color: '#9c8f72', marginLeft: 4, fontWeight: 400 }}>
                       ({resources[fromRes] || 0})
@@ -899,7 +901,7 @@ export default function Demo() {
                         disabled={(resources[fromRes] || 0) < 3}
                         style={{
                           ...btn((resources[fromRes] || 0) < 3),
-                          fontSize: 10, padding: '2px 4px', textAlign: 'left'
+                          fontSize: 12, padding: '2px 4px', textAlign: 'left'
                         }}>
                         → {toRes}
                       </button>
@@ -911,13 +913,13 @@ export default function Demo() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr 380px', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr 400px', gap: 12, flex: 1, overflow: 'hidden' }}>
           {/* 左栏：操作面板 + 日志 */}
-          <div style={{ maxHeight: 'calc(100vh - 160px)', overflowY: 'auto' }}>
-            <div style={panel}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ ...panel, flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 6, flexShrink: 0 }}>
                 <h3 style={h3Style}>
-                  {upgradeMode ? `升级模式 · ${upgradableRegions.length} 区域`
+                  {upgradeMode ? `升级 · ${upgradableRegions.length} 区域`
                     : freeChangeMode ? `改造 · 剩余 ${freeChanges} 次`
                     : `地形卡 · ${hand.length}张`}
                 </h3>
@@ -932,7 +934,7 @@ export default function Demo() {
                       setSelectedCardId(null);
                     }}
                     style={{
-                      ...btn(false), fontSize: 11, padding: '4px 8px',
+                      ...btn(false), fontSize: 13, padding: '4px 8px',
                       background: upgradeMode ? '#c9a961' : '#3d3524',
                       color: upgradeMode ? '#1a1812' : '#c9a961',
                     }}
@@ -947,13 +949,13 @@ export default function Demo() {
                     }}
                     disabled={freeChanges <= 0}
                     style={{
-                      ...btn(freeChanges <= 0), fontSize: 11, padding: '4px 8px',
+                      ...btn(freeChanges <= 0), fontSize: 13, padding: '4px 8px',
                       background: freeChangeMode ? '#c9a961' : undefined,
                       color: freeChangeMode ? '#1a1812' : undefined,
                     }}
                   >{freeChangeMode ? '退出改造' : `改造(${freeChanges})`}</button>
-                  {!upgradeMode && !freeChangeMode && <button onClick={handleRotate} disabled={!selectedCard} style={{ ...btn(!selectedCard), fontSize: 11, padding: '4px 8px' }}>旋转 {rotation * 90}°</button>}
-                  <button onClick={handleUndo} disabled={mapHistory.length === 0} style={{ ...btn(mapHistory.length === 0), fontSize: 11, padding: '4px 8px' }}>撤回</button>
+                  {!upgradeMode && !freeChangeMode && <button onClick={handleRotate} disabled={!selectedCard} style={{ ...btn(!selectedCard), fontSize: 13, padding: '4px 8px' }}>旋转 {rotation * 90}°</button>}
+                  <button onClick={handleUndo} disabled={mapHistory.length === 0} style={{ ...btn(mapHistory.length === 0), fontSize: 13, padding: '4px 8px' }}>撤回</button>
                 </div>
               </div>
 
@@ -961,23 +963,23 @@ export default function Demo() {
                 <div>
                   {activeRegion ? (
                     <div style={{ background: '#1a1812', padding: 10, marginBottom: 8 }}>
-                      <div style={{ fontSize: 12, color: '#e8dfc8', marginBottom: 4 }}>
+                      <div style={{ fontSize: 14, color: '#e8dfc8', marginBottom: 4 }}>
                         {TERRAIN[activeRegion.key].name}（{activeRegion.cells.length}格）→ {TERRAIN[upgradeTarget(activeRegion.key)].name}
                       </div>
-                      <div style={{ fontSize: 11, color: '#9c8f72', marginBottom: 6 }}>
+                      <div style={{ fontSize: 13, color: '#9c8f72', marginBottom: 6 }}>
                         可升 <span style={{ color: '#c9a961' }}>{activeRegion.canUpgrade}</span> 格 · 已选 <span style={{ color: '#7a9a4f' }}>{upgradeSelections.length}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={handleConfirmUpgrade} disabled={upgradeSelections.length === 0}
-                          style={{ ...primaryBtn, padding: '5px 12px', fontSize: 11 }}>
+                          style={{ ...primaryBtn, padding: '5px 12px', fontSize: 13 }}>
                           确认升级 {upgradeSelections.length} 格
                         </button>
                         <button onClick={() => { setActiveRegion(null); setUpgradeSelections([]); }}
-                          style={{ ...btn(false), padding: '5px 12px', fontSize: 11 }}>取消</button>
+                          style={{ ...btn(false), padding: '5px 12px', fontSize: 13 }}>取消</button>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ fontSize: 11, color: '#9c8f72', padding: '8px 10px', background: '#1a1812' }}>
+                    <div style={{ fontSize: 13, color: '#9c8f72', padding: '8px 10px', background: '#1a1812' }}>
                       {upgradableRegions.length === 0
                         ? '无可升级区域（需3格同类相连）'
                         : '点虚线格子选区域 → 点格子选升级'}
@@ -988,7 +990,7 @@ export default function Demo() {
                 <div>
                   {freeChangePicking ? (
                     <div style={{ background: '#1a1812', padding: 10 }}>
-                      <div style={{ fontSize: 12, color: '#e8dfc8', marginBottom: 6 }}>
+                      <div style={{ fontSize: 14, color: '#e8dfc8', marginBottom: 6 }}>
                         ({freeChangePicking.x},{freeChangePicking.y}) 变为：
                       </div>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -996,21 +998,21 @@ export default function Demo() {
                           <button key={key} onClick={() => handleFreeChangeConfirm(key)} style={{
                             padding: '4px 8px', background: TERRAIN[key].color,
                             color: '#fff', border: '1px solid rgba(255,255,255,0.3)',
-                            cursor: 'pointer', fontSize: 11, fontFamily: "'Noto Serif SC', serif",
+                            cursor: 'pointer', fontSize: 13, fontFamily: "'Noto Serif SC', serif",
                           }}>{TERRAIN[key].name}</button>
                         ))}
                       </div>
                       <button onClick={() => setFreeChangePicking(null)}
-                        style={{ ...btn(false), marginTop: 6, fontSize: 10 }}>取消</button>
+                        style={{ ...btn(false), marginTop: 6, fontSize: 12 }}>取消</button>
                     </div>
                   ) : (
-                    <div style={{ fontSize: 11, color: '#9c8f72', padding: '8px 10px', background: '#1a1812' }}>
+                    <div style={{ fontSize: 13, color: '#9c8f72', padding: '8px 10px', background: '#1a1812' }}>
                       点击地图非城市格选地形（剩余{freeChanges}次）
                     </div>
                   )}
                 </div>
               ) : (
-                <div>
+                <div style={{ flex: 1, overflowY: 'auto' }}>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                     {hand.map(card => {
                       const isRerollMarked = rerollSelected.has(card.id);
@@ -1037,18 +1039,18 @@ export default function Demo() {
                               color: isRerollMarked ? '#1a1812' : '#9c8f72',
                               border: '1px solid #9c8f72',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 10, cursor: 'pointer',
+                              fontSize: 12, cursor: 'pointer',
                             }}
                             title="标记随机"
                           >{isRerollMarked ? '✓' : '⟳'}</div>
                         </div>
                       );
                     })}
-                    {hand.length === 0 && <div style={{ color: '#9c8f72', fontSize: 12 }}>手牌用完</div>}
+                    {hand.length === 0 && <div style={{ color: '#9c8f72', fontSize: 14 }}>手牌用完</div>}
                   </div>
                   {rerollSelected.size > 0 && (
                     <button onClick={handleReroll} disabled={rerollsLeft <= 0}
-                      style={{ ...primaryBtn, padding: '5px 12px', fontSize: 11 }}>
+                      style={{ ...primaryBtn, padding: '5px 12px', fontSize: 13 }}>
                       随机{rerollSelected.size}张（{rerollsLeft}/2）
                     </button>
                   )}
@@ -1056,9 +1058,9 @@ export default function Demo() {
               )}
             </div>
 
-            <div style={{ ...panel, marginTop: 12 }}>
+            <div style={{ ...panel, marginTop: 8, flexShrink: 0, maxHeight: '30%' }}>
               <h3 style={h3Style}>日志</h3>
-              <div style={{ fontSize: 11, maxHeight: 200, overflowY: 'auto', marginTop: 6 }}>
+              <div style={{ fontSize: 13, maxHeight: 160, overflowY: 'auto', marginTop: 6 }}>
                 {log.map((l, i) => (
                   <div key={i} style={{ color: i === 0 ? '#e8dfc8' : '#9c8f72', padding: '2px 0' }}>{l}</div>
                 ))}
@@ -1067,9 +1069,9 @@ export default function Demo() {
           </div>
 
           {/* 中栏：地图 */}
-          <div>
-            <div style={panel}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2, aspectRatio: '1', maxWidth: 720, margin: '0 auto' }}>
+          <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2, aspectRatio: '1', maxHeight: '100%', margin: '0 auto' }}>
                 {Array.from({ length: 10 }).map((_, y) =>
                   Array.from({ length: 10 }).map((_, x) => {
                     const terrain = map[y][x];
@@ -1153,14 +1155,14 @@ export default function Demo() {
                         {!city && t.tier >= 2 && (
                           <div style={{
                             position: 'absolute', bottom: 1, right: 2,
-                            fontSize: 9, color: 'rgba(255,255,255,0.7)', fontWeight: 700
+                            fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 700
                           }}>{t.tier === 2 ? 'II' : 'III'}</div>
                         )}
                         {city && (
                           <div style={{
                             position: 'absolute', inset: 0, display: 'flex',
                             alignItems: 'center', justifyContent: 'center',
-                            fontFamily: "'Cinzel', serif", fontWeight: 600, fontSize: 14,
+                            fontFamily: "'Cinzel', serif", fontWeight: 600, fontSize: 16,
                             color: '#1a1812', background: 'rgba(201, 169, 97, 0.9)',
                           }}>{city.id}</div>
                         )}
@@ -1169,7 +1171,7 @@ export default function Demo() {
                             position: 'absolute', inset: 0,
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(194,90,58,0.3) 3px, rgba(194,90,58,0.3) 5px)',
                           }}>
-                            <div style={{ position: 'absolute', top: 1, right: 1, fontSize: 8, color: '#c25a3a' }}>⚡</div>
+                            <div style={{ position: 'absolute', top: 1, right: 1, fontSize: 10, color: '#c25a3a' }}>⚡</div>
                           </div>
                         )}
                       </div>
@@ -1177,7 +1179,7 @@ export default function Demo() {
                   })
                 )}
               </div>
-              <div style={{ marginTop: 10, fontSize: 11, color: '#9c8f72', display: 'flex', gap: 16, justifyContent: 'center' }}>
+              <div style={{ marginTop: 6, fontSize: 13, color: '#9c8f72', display: 'flex', gap: 16, justifyContent: 'center', flexShrink: 0 }}>
                 <span>II = 中级地形</span>
                 <span>III = 高级地形</span>
                 <span>3格同类相连可升级1格</span>
@@ -1188,8 +1190,8 @@ export default function Demo() {
           </div>
 
           {/* 右栏：城市面板 */}
-          <div style={{ ...panel, maxHeight: 'calc(100vh - 160px)', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ ...panel, overflowY: 'auto' }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap' }}>
               {CITIES.map(city => (
                 <button key={city.id}
                   onClick={() => setSelectedCityId(city.id)}
@@ -1201,7 +1203,7 @@ export default function Demo() {
                     border: '1px solid #3d3524',
                     cursor: 'pointer',
                     fontFamily: "'Noto Serif SC', serif",
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: 600,
                   }}
                 >{city.id} {city.name}</button>
@@ -1211,24 +1213,24 @@ export default function Demo() {
             {currentCityStatus && (
               <>
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, color: '#9c8f72', marginBottom: 6, letterSpacing: 1 }}>
+                  <div style={{ fontSize: 13, color: '#9c8f72', marginBottom: 6, letterSpacing: 1 }}>
                     辖区地形 · 3×3 · 统计每种地形的格子数
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                     {Object.entries(currentCityStatus.terrainValues).length === 0 ? (
-                      <div style={{ fontSize: 11, color: '#5a5140', padding: '6px 10px', gridColumn: 'span 2' }}>
+                      <div style={{ fontSize: 13, color: '#5a5140', padding: '6px 10px', gridColumn: 'span 2' }}>
                         辖区内无有效地形
                       </div>
                     ) : (
                       Object.entries(currentCityStatus.terrainValues).map(([key, v]) => (
                         <div key={key} style={{
                           padding: '6px 10px', background: '#1a1812',
-                          fontSize: 12, display: 'flex', justifyContent: 'space-between',
+                          fontSize: 14, display: 'flex', justifyContent: 'space-between',
                           borderLeft: `2px solid ${TERRAIN[key].color}`,
                         }}>
                           <span style={{ color: '#e8dfc8' }}>
                             {TERRAIN[key].name}
-                            {TERRAIN[key].tier >= 2 && <span style={{ color: '#9c8f72', fontSize: 10, marginLeft: 3 }}>{TERRAIN[key].tier === 2 ? 'II' : 'III'}</span>}
+                            {TERRAIN[key].tier >= 2 && <span style={{ color: '#9c8f72', fontSize: 12, marginLeft: 3 }}>{TERRAIN[key].tier === 2 ? 'II' : 'III'}</span>}
                           </span>
                           <span style={{ color: '#c9a961', fontWeight: 600 }}>{v}</span>
                         </div>
@@ -1238,11 +1240,11 @@ export default function Demo() {
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, color: '#9c8f72', marginBottom: 6, letterSpacing: 1 }}>
+                  <div style={{ fontSize: 13, color: '#9c8f72', marginBottom: 6, letterSpacing: 1 }}>
                     已建造 · {currentCityStatus.buildings.length}
                   </div>
                   {currentCityStatus.buildings.length === 0 ? (
-                    <div style={{ fontSize: 12, color: '#5a5140', padding: '8px 10px', background: '#1a1812' }}>
+                    <div style={{ fontSize: 14, color: '#5a5140', padding: '8px 10px', background: '#1a1812' }}>
                       此城市尚未建造任何建筑
                     </div>
                   ) : (
@@ -1253,8 +1255,8 @@ export default function Demo() {
                         borderLeft: `3px solid ${b.status === 'ok' ? '#7a9a4f' : b.status === 'debuff' ? '#c9a961' : '#c25a3a'}`,
                       }}>
                         <div>
-                          <div style={{ fontSize: 13, color: '#e8dfc8' }}>{b.name}</div>
-                          <div style={{ fontSize: 10, color: '#9c8f72' }}>
+                          <div style={{ fontSize: 15, color: '#e8dfc8' }}>{b.name}</div>
+                          <div style={{ fontSize: 12, color: '#9c8f72' }}>
                             {b.output} ·
                             {b.status === 'ok' && <span style={{ color: '#7a9a4f' }}> 满负荷</span>}
                             {b.status === 'debuff' && <span style={{ color: '#c9a961' }}> 产能减半 · {TERRAIN[b.terrain].name}{b.value}/{b.need}</span>}
@@ -1262,14 +1264,14 @@ export default function Demo() {
                           </div>
                         </div>
                         <button onClick={() => handleDemolish(selectedCityId, b.id)}
-                          style={{ ...btn(false), padding: '3px 8px', fontSize: 11 }}>拆</button>
+                          style={{ ...btn(false), padding: '3px 8px', fontSize: 13 }}>拆</button>
                       </div>
                     ))
                   )}
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 11, color: '#9c8f72', marginBottom: 6, letterSpacing: 1 }}>
+                  <div style={{ fontSize: 13, color: '#9c8f72', marginBottom: 6, letterSpacing: 1 }}>
                     可建造
                   </div>
                   {BUILDINGS.map(b => {
@@ -1285,23 +1287,23 @@ export default function Demo() {
                         opacity: already ? 0.4 : 1,
                       }}>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, color: '#e8dfc8', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 15, color: '#e8dfc8', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             {b.name}
                             <span style={{
-                              fontSize: 10,
+                              fontSize: 12,
                               color: willWork ? '#7a9a4f' : v > 0 ? '#c9a961' : '#c25a3a',
                             }}>
                               需{TERRAIN[b.terrain].name}≥{b.need}（当前{v}）
                             </span>
                           </div>
-                          <div style={{ fontSize: 10, color: unlocked ? '#9c8f72' : '#c25a3a' }}>
+                          <div style={{ fontSize: 12, color: unlocked ? '#9c8f72' : '#c25a3a' }}>
                             {b.output} · 占用 {b.unlock.count} 名{b.unlock.level}信众（空闲{free}）
                           </div>
                         </div>
                         <button
                           onClick={() => handleBuild(selectedCityId, b)}
                           disabled={already || !unlocked}
-                          style={{ ...btn(already || !unlocked), padding: '4px 10px', fontSize: 11 }}
+                          style={{ ...btn(already || !unlocked), padding: '4px 10px', fontSize: 13 }}
                         >
                           {already ? '已建' : unlocked ? '建造' : '信众不足'}
                         </button>
@@ -1314,18 +1316,6 @@ export default function Demo() {
           </div>
         </div>
 
-        <footer style={{
-          marginTop: 16, padding: 12, background: '#242017',
-          border: '1px solid #3d3524', fontSize: 11, color: '#9c8f72', lineHeight: 1.8,
-        }}>
-          <strong style={{ color: '#c9a961' }}>玩法：</strong>
-          ① 建筑需要特定地形的格子数（如大农场需2格沃土、牧野庄园需1格牧野）
-          · ② 地形卡只放基础级地形，中高级要通过"升级地形"模式手动选择
-          · ③ 点"升级地形"→ 地图显示可升级区域（虚线） → 点区域 → 点具体格子升级
-          · ④ 3格同类相连可升1个，12格可升2个
-          · ⑤ 信众按等级分（粗浅/严肃/深刻），每建筑占用5名信众
-          · ⑥ 需求连续3回合不满足，该等级人口减员
-        </footer>
       </div>
     </div>
   );
@@ -1338,7 +1328,7 @@ const panel = {
 };
 const h3Style = {
   fontFamily: "'Cinzel', serif",
-  fontSize: 13,
+  fontSize: 15,
   letterSpacing: 2,
   color: '#c9a961',
   margin: 0,
@@ -1351,7 +1341,7 @@ const btn = (disabled) => ({
   border: '1px solid #3d3524',
   padding: '6px 12px',
   fontFamily: "'Noto Serif SC', serif",
-  fontSize: 12,
+  fontSize: 14,
   cursor: disabled ? 'not-allowed' : 'pointer',
   letterSpacing: 1,
 });
@@ -1361,7 +1351,7 @@ const primaryBtn = {
   border: 'none',
   padding: '8px 18px',
   fontFamily: "'Noto Serif SC', serif",
-  fontSize: 13,
+  fontSize: 15,
   cursor: 'pointer',
   letterSpacing: 2,
   fontWeight: 600,
@@ -1397,7 +1387,7 @@ function CardView({ card, selected, rotation, onClick }) {
           })
         )}
       </div>
-      <div style={{ fontSize: 10, color: selected ? '#c9a961' : '#9c8f72', textAlign: 'center' }}>
+      <div style={{ fontSize: 12, color: selected ? '#c9a961' : '#9c8f72', textAlign: 'center' }}>
         {card.name}
       </div>
     </div>
