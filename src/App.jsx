@@ -1172,7 +1172,7 @@ export default function Demo() {
                           <div style={{
                             position: 'absolute', inset: 0, display: 'flex',
                             alignItems: 'center', justifyContent: 'center',
-                            fontFamily: "'Noto Serif SC', serif", fontWeight: 600, fontSize: 11,
+                            fontFamily: "'Noto Serif SC', serif", fontWeight: 600, fontSize: 14,
                             color: '#1a1812', background: 'rgba(201, 169, 97, 0.9)',
                             lineHeight: 1.1, textAlign: 'center', padding: 1,
                           }}>{city.name}</div>
