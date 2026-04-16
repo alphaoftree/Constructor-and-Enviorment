@@ -1202,12 +1202,12 @@ export default function Demo() {
                 <div style={{ fontSize: 13, color: '#9c8f72', fontWeight: 600, marginBottom: 2 }}>启迪智慧</div>
                 <button onClick={() => handleEnlighten('粗浅', '严肃', 10)}
                   disabled={(population.粗浅 - popUsage.粗浅) < 10}
-                  style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 13, padding: '5px 10px', width: '100%' }}>
+                  style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 13, padding: '5px 10px' }}>
                   粗浅→严肃(10→5)
                 </button>
                 <button onClick={() => handleEnlighten('严肃', '深刻', 6)}
                   disabled={(population.严肃 - popUsage.严肃) < 6}
-                  style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 13, padding: '5px 10px', width: '100%' }}>
+                  style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 13, padding: '5px 10px' }}>
                   严肃→深刻(6→3)
                 </button>
                 <div style={{ height: 12 }} />
