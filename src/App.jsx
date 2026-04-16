@@ -970,7 +970,7 @@ export default function Demo() {
                       color: freeChangeMode ? '#1a1812' : undefined,
                     }}
                   >{freeChangeMode ? '退出改造' : `改造(${freeChanges})`}</button>
-                  {!upgradeMode && !freeChangeMode && <button onClick={handleRotate} disabled={!selectedCard} style={{ ...btn(!selectedCard), fontSize: 16, padding: '4px 8px' }}>旋转 {rotation * 90}°</button>}
+                  {!upgradeMode && !freeChangeMode && <span style={{ fontSize: 13, color: '#9c8f72' }}>右键旋转</span>}
                   <button onClick={handleUndo} disabled={mapHistory.length === 0} style={{ ...btn(mapHistory.length === 0), fontSize: 16, padding: '4px 8px' }}>撤回</button>
                 </div>
               </div>
@@ -1067,9 +1067,12 @@ export default function Demo() {
                   {rerollSelected.size > 0 && (
                     <button onClick={handleReroll} disabled={rerollsLeft <= 0}
                       style={{ ...primaryBtn, padding: '5px 12px', fontSize: 13 }}>
-                      随机{rerollSelected.size}张（{rerollsLeft}/2）
+                      重抽{rerollSelected.size}张（{rerollsLeft}/2）
                     </button>
                   )}
+                  <div style={{ fontSize: 12, color: '#5a5140', marginTop: 6 }}>
+                    点击卡片右上角 ⟳ 标记不想要的卡，可重新抽取
+                  </div>
                 </div>
               )}
             </div>
