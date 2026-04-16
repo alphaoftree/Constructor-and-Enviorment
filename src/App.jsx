@@ -495,7 +495,7 @@ export default function Demo() {
     // 检查空闲信众是否足够
     const free = population[building.unlock.level] - popUsage[building.unlock.level];
     if (free < building.unlock.count) {
-      addLog(`⚠ 空闲${building.unlock.level}信众不足（需${building.unlock.count}，空闲${free}）`);
+      addLog(`⚠ 空闲${building.unlock.level}之人不足（需${building.unlock.count}，空闲${free}）`);
       return;
     }
     const existing = cityBuildings[cityId];
@@ -509,7 +509,7 @@ export default function Demo() {
       [cityId]: [...existing, building]
     });
     const city = CITIES.find(c => c.id === cityId);
-    addLog(`⚒ ${city.name} 建造 ${building.name}（占用 ${building.unlock.count} 名${building.unlock.level}信众）`);
+    addLog(`⚒ ${city.name} 建造 ${building.name}（占用 ${building.unlock.count} 名${building.unlock.level}之人）`);
   };
 
   const handleDemolish = (cityId, buildingId) => {
@@ -708,7 +708,7 @@ export default function Demo() {
   const handleEnlighten = (fromLevel, toLevel, need) => {
     const free = population[fromLevel] - popUsage[fromLevel];
     if (free < need) {
-      addLog(`⚠ 空闲${fromLevel}信众不足（需${need}，空闲${free}）`);
+      addLog(`⚠ 空闲${fromLevel}之人不足（需${need}，空闲${free}）`);
       return;
     }
     setMapHistory([...mapHistory, { map, buildings: cityBuildings, resources, population, hand }]);
@@ -717,7 +717,7 @@ export default function Demo() {
       [fromLevel]: population[fromLevel] - need,
       [toLevel]: population[toLevel] + Math.floor(need / 2),
     });
-    addLog(`✦ 启示：${need}名${fromLevel}信众 → ${Math.floor(need / 2)}名${toLevel}信众`);
+    addLog(`✦ 启迪智慧：${need}名${fromLevel}之人 → ${Math.floor(need / 2)}名${toLevel}之人`);
   };
 
   // 商店交易：3个from资源换1个to资源
@@ -802,7 +802,7 @@ export default function Demo() {
           flexShrink: 0,
         }}>
           <div style={{ display: 'flex', gap: 12, fontSize: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ color: '#9c8f72', fontSize: 16, letterSpacing: 1 }}>信众</div>
+            <div style={{ color: '#9c8f72', fontSize: 16, letterSpacing: 1 }}>智慧等级</div>
             {['粗浅', '严肃', '深刻'].map(level => {
               const needs = POP_NEEDS[level];
               const needStr = Object.entries(needs).map(([r, a]) => `${r}×${a}`).join(' ');
@@ -826,12 +826,12 @@ export default function Demo() {
             <button onClick={() => handleEnlighten('粗浅', '严肃', 10)}
               disabled={(population.粗浅 - popUsage.粗浅) < 10}
               style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 16, padding: '4px 8px' }}>
-              启示·粗浅→严肃(10→5)
+              启迪智慧·粗浅→严肃(10→5)
             </button>
             <button onClick={() => handleEnlighten('严肃', '深刻', 6)}
               disabled={(population.严肃 - popUsage.严肃) < 6}
               style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 16, padding: '4px 8px' }}>
-              启示·严肃→深刻(6→3)
+              启迪智慧·严肃→深刻(6→3)
             </button>
           </div>
           <div style={{ display: 'flex', gap: 16, fontSize: 16, flexWrap: 'wrap' }}>
@@ -1299,7 +1299,7 @@ export default function Demo() {
                             </span>
                           </div>
                           <div style={{ fontSize: 16, color: '#9c8f72' }}>
-                            {b.output} · 占用 {b.unlock.count} 名<span style={{ color: LEVEL_COLOR[b.unlock.level] }}>{b.unlock.level}</span>信众（<span style={{ color: unlocked ? LEVEL_COLOR[b.unlock.level] : '#c25a3a' }}>空闲{free}</span>）
+                            {b.output} · 占用 {b.unlock.count} 名<span style={{ color: LEVEL_COLOR[b.unlock.level] }}>{b.unlock.level}</span>之人（<span style={{ color: unlocked ? LEVEL_COLOR[b.unlock.level] : '#c25a3a' }}>空闲{free}</span>）
                           </div>
                         </div>
                         <button
@@ -1307,7 +1307,7 @@ export default function Demo() {
                           disabled={already || !unlocked}
                           style={{ ...btn(already || !unlocked), padding: '4px 10px', fontSize: 13 }}
                         >
-                          {already ? '已建' : unlocked ? '建造' : '信众不足'}
+                          {already ? '已建' : unlocked ? '建造' : '人手不足'}
                         </button>
                       </div>
                     );
