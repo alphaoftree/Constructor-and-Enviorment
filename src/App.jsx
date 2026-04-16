@@ -44,6 +44,12 @@ const CLIMATE_NAMES = {
 
 const TIER_WEIGHT = { 0: 0, 1: 1, 2: 3, 3: 9 };
 
+const LEVEL_COLOR = {
+  粗浅: '#c9a961',  // 暖金
+  严肃: '#7a9ab5',  // 灰蓝
+  深刻: '#b07a9a',  // 烟紫
+};
+
 const CITIES = [
   { id: 'A', name: '粮木城', x: 2, y: 2 },
   { id: 'B', name: '药木城', x: 7, y: 2 },
@@ -805,8 +811,8 @@ export default function Demo() {
               return (
                 <div key={level} style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
                   <div>
-                    <span style={{ color: '#9c8f72', marginRight: 4 }}>{level}</span>
-                    <span style={{ color: '#c9a961', fontWeight: 600 }}>{used}/{total}</span>
+                    <span style={{ color: LEVEL_COLOR[level], marginRight: 4 }}>{level}</span>
+                    <span style={{ color: LEVEL_COLOR[level], fontWeight: 600 }}>{used}/{total}</span>
                     {unmetTurns[level] > 0 && (
                       <span style={{ color: '#c25a3a', fontSize: 16, marginLeft: 3 }}>
                         ({unmetTurns[level]}/3断供)
@@ -1289,8 +1295,8 @@ export default function Demo() {
                               需{TERRAIN[b.terrain].name}≥{b.need}（当前{v}）
                             </span>
                           </div>
-                          <div style={{ fontSize: 16, color: unlocked ? '#9c8f72' : '#c25a3a' }}>
-                            {b.output} · 占用 {b.unlock.count} 名{b.unlock.level}信众（空闲{free}）
+                          <div style={{ fontSize: 16, color: '#9c8f72' }}>
+                            {b.output} · 占用 {b.unlock.count} 名<span style={{ color: LEVEL_COLOR[b.unlock.level] }}>{b.unlock.level}</span>信众（<span style={{ color: unlocked ? LEVEL_COLOR[b.unlock.level] : '#c25a3a' }}>空闲{free}</span>）
                           </div>
                         </div>
                         <button
