@@ -1070,8 +1070,8 @@ export default function Demo() {
 
           {/* 中栏：地图 */}
           <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2, aspectRatio: '1', maxHeight: '100%', margin: '0 auto' }}>
+            <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2, width: '100%', maxWidth: 'calc(100vh - 200px)', aspectRatio: '1' }}>
                 {Array.from({ length: 10 }).map((_, y) =>
                   Array.from({ length: 10 }).map((_, x) => {
                     const terrain = map[y][x];
