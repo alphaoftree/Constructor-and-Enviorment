@@ -795,6 +795,11 @@ export default function Demo() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Noto+Serif+SC:wght@400;500;600&display=swap');`}</style>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, marginBottom: 6 }}>
+          <span style={{ color: '#c9a961', fontSize: 16, fontWeight: 600, fontFamily: "'Noto Serif SC', serif" }}>
+            建设系统Demo · <span style={{ color: '#9c8f72' }}>回合 {turn}</span>
+          </span>
+        </div>
         <div style={{
           display: 'flex', alignItems: 'center',
           padding: '8px 16px', background: '#242017',
@@ -804,7 +809,6 @@ export default function Demo() {
           <button onClick={() => setShowShop(!showShop)} style={{ ...btn(false), fontSize: 14 }}>
             {showShop ? '关闭商店' : '商店'}
           </button>
-          <span style={{ color: '#9c8f72', fontSize: 15 }}>回合 {turn}</span>
           <div style={{ display: 'flex', gap: 16, fontSize: 16, flexWrap: 'wrap' }}>
             {Object.entries(resources).map(([k, v]) => {
               const delta = netChange[k] || 0;
@@ -916,7 +920,7 @@ export default function Demo() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr auto 400px', gap: 12, flex: 1, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr 400px', gap: 12, flex: 1, overflow: 'hidden' }}>
           {/* 左栏：操作面板 + 日志 */}
           <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <div style={{ ...panel, flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -1076,7 +1080,7 @@ export default function Demo() {
 
           {/* 中栏：地图 */}
           <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2, width: '100%', maxWidth: 'calc(100vh - 200px)', aspectRatio: '1' }}>
                 {Array.from({ length: 10 }).map((_, y) =>
                   Array.from({ length: 10 }).map((_, x) => {
@@ -1193,23 +1197,25 @@ export default function Demo() {
                 <span>3格同类相连可升级1格</span>
                 <span>⚡ 气候冲突：相邻气候差≥2档断开相连，无法升级</span>
               </div>
+              <div style={{ position: 'absolute', bottom: 12, right: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <div style={{ fontSize: 13, color: '#9c8f72', fontWeight: 600, marginBottom: 2 }}>启迪智慧</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => handleEnlighten('粗浅', '严肃', 10)}
+                    disabled={(population.粗浅 - popUsage.粗浅) < 10}
+                    style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 13, padding: '5px 10px' }}>
+                    粗浅→严肃(10→5)
+                  </button>
+                  <button onClick={() => handleEnlighten('严肃', '深刻', 6)}
+                    disabled={(population.严肃 - popUsage.严肃) < 6}
+                    style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 13, padding: '5px 10px' }}>
+                    严肃→深刻(6→3)
+                  </button>
+                </div>
+                <div style={{ height: 6 }} />
+                <button onClick={handleNextTurn} style={{ ...primaryBtn, fontSize: 14, padding: '8px 20px' }}>下一回合 ▶</button>
+              </div>
             </div>
 
-          </div>
-
-          {/* 中间操作栏 */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
-            <button onClick={() => handleEnlighten('粗浅', '严肃', 10)}
-              disabled={(population.粗浅 - popUsage.粗浅) < 10}
-              style={{ ...btn((population.粗浅 - popUsage.粗浅) < 10), fontSize: 13, padding: '6px 10px', whiteSpace: 'nowrap' }}>
-              启迪智慧·粗浅→严肃(10→5)
-            </button>
-            <button onClick={() => handleEnlighten('严肃', '深刻', 6)}
-              disabled={(population.严肃 - popUsage.严肃) < 6}
-              style={{ ...btn((population.严肃 - popUsage.严肃) < 6), fontSize: 13, padding: '6px 10px', whiteSpace: 'nowrap' }}>
-              启迪智慧·严肃→深刻(6→3)
-            </button>
-            <button onClick={handleNextTurn} style={{ ...primaryBtn, whiteSpace: 'nowrap' }}>下一回合 ▶</button>
           </div>
 
           {/* 右栏：城市面板 */}
