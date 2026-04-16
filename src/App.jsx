@@ -1069,16 +1069,17 @@ export default function Demo() {
                       重抽{rerollSelected.size}张（{rerollsLeft}/2）
                     </button>
                   )}
-                  <div style={{ marginTop: 'auto', paddingTop: 8, fontSize: 14, color: '#9c8f72', fontWeight: 600 }}>
-                    右键旋转卡片 · 点右上角 ⟳ 标记后可重抽
-                  </div>
                 </div>
               )}
+              <div style={{ flexShrink: 0, borderTop: '1px solid #3d3524', marginTop: 'auto', paddingTop: 8, fontSize: 14, color: '#9c8f72', fontWeight: 600, lineHeight: 1.8 }}>
+                <div>鼠标右键旋转地形卡</div>
+                <div>点击卡片右上角 ⟳ 标记不想要的卡，可重新抽取</div>
+              </div>
             </div>
 
-            <div style={{ ...panel, marginTop: 8, flexShrink: 0, maxHeight: '30%' }}>
+            <div style={{ ...panel, marginTop: 8, flexShrink: 0, height: 180, display: 'flex', flexDirection: 'column' }}>
               <h3 style={h3Style}>日志</h3>
-              <div style={{ fontSize: 12, maxHeight: 160, overflowY: 'auto', marginTop: 6 }}>
+              <div style={{ fontSize: 12, flex: 1, overflowY: 'auto', marginTop: 6 }}>
                 {log.map((l, i) => (
                   <div key={i} style={{ color: i === 0 ? '#e8dfc8' : '#9c8f72', padding: '2px 0' }}>{l}</div>
                 ))}
