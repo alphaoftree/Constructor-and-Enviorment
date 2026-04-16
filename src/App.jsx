@@ -963,11 +963,10 @@ export default function Demo() {
                       setActiveRegion(null);
                       setSelectedCardId(null);
                     }}
-                    disabled={freeChanges <= 0}
                     style={{
-                      ...btn(freeChanges <= 0), fontSize: 16, padding: '4px 8px',
-                      background: freeChangeMode ? '#c9a961' : undefined,
-                      color: freeChangeMode ? '#1a1812' : undefined,
+                      ...btn(false), fontSize: 16, padding: '4px 8px',
+                      background: freeChangeMode ? '#c9a961' : '#3d3524',
+                      color: freeChangeMode ? '#1a1812' : '#c9a961',
                     }}
                   >{freeChangeMode ? '退出改造' : `改造地形(${freeChanges})`}</button>
                   <button onClick={handleUndo} disabled={mapHistory.length === 0} style={{ ...btn(mapHistory.length === 0), fontSize: 16, padding: '4px 8px' }}>撤回</button>
