@@ -162,6 +162,11 @@ const GROW_PER_HOUSING = 4; // 每座住房幸福>0时每回合涨人数
 const EXTEND_COST = { 工具:3, 粮食:20 };
 const EXTEND_CELLS = 3;
 
+// ===== 神力（抽卡）=====
+const MANA_INIT = 3;
+const MANA_PER_TURN = 1;
+const MANA_PER_BATCH = 3;
+
 // 简化柏林噪声：生成平滑的2D值场
 // 通过几个随机锚点+距离插值模拟
 const makeNoiseField = (numAnchors = 8, smoothness = 1.5) => {
@@ -341,7 +346,7 @@ const generateCard = () => {
 
   const nameStr = [...new Set(types)].map(t => TERRAIN[t].name).join('+');
   cardCounter++;
-  return { id: `gen_${cardCounter}_${Math.random().toString(36).slice(2,8)}`, shape: shapeKey, terrains, name: `${nameStr}·由` };
+  return { id: `gen_${cardCounter}_${Math.random().toString(36).slice(2,8)}`, shape: shapeKey, terrains, name: nameStr };
 };
 
 const generateHand = () => Array.from({ length: HAND_SIZE }, () => generateCard());
@@ -492,10 +497,11 @@ const getCityCellsFull = (city, extension) => {
   return cells;
 };
 
-// 数城市辖区（含扩展）里某种地形的格子数
-const cityTerrainCountFull = (map, city, extension, terrainKey) => {
+// 数城市辖区（含扩展）里某种地形的格子数；conflictSet 里的格子（气候冲突）不计
+const cityTerrainCountFull = (map, city, extension, terrainKey, conflictSet) => {
   let count = 0;
   for (const [x, y] of getCityCellsFull(city, extension)) {
+    if (conflictSet && conflictSet.has(`${x},${y}`)) continue;
     if (map[y][x] === terrainKey) count += 1;
   }
   return count;
@@ -503,9 +509,9 @@ const cityTerrainCountFull = (map, city, extension, terrainKey) => {
 
 // 按"相同地形平均分配"计算一座建筑拿到的地形值
 // 同城里所有启用的、需要同种地形的建筑一起分母
-const buildingTerrainShare = (map, city, extension, bldsOfCity, building) => {
+const buildingTerrainShare = (map, city, extension, bldsOfCity, building, conflictSet) => {
   if (!building.terrain) return Infinity; // 加工建筑不需要地形
-  const total = cityTerrainCountFull(map, city, extension, building.terrain);
+  const total = cityTerrainCountFull(map, city, extension, building.terrain, conflictSet);
   const sameTerrainCount = bldsOfCity.filter(b => !b.disabled && b.terrain === building.terrain).length || 1;
   return total / sameTerrainCount;
 };
@@ -538,7 +544,7 @@ const INIT_HOMELESS = () => Object.fromEntries(CITIES.map(c => [c.id, { 粗浅: 
 export default function Demo() {
   const [map, setMap] = useState(makeInitialMap);
   const [mapHistory, setMapHistory] = useState([]);
-  const [hand, setHand] = useState(() => generateHand());
+  const [hand, setHand] = useState(() => []);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [rotation, setRotation] = useState(0);
   const [hoverCell, setHoverCell] = useState(null);
@@ -552,6 +558,7 @@ export default function Demo() {
   const [homeless, setHomeless]   = useState(INIT_HOMELESS);
   const [research, setResearch] = useState(0);
   const [unlockedBlds, setUnlockedBlds] = useState(() => new Set());
+  const [mana, setMana] = useState(MANA_INIT);
   const [turn, setTurn] = useState(1);
   const [log, setLog] = useState(['游戏开始。选择手牌放置地形，然后在右侧城市面板建造建筑。']);
 
@@ -581,7 +588,7 @@ export default function Demo() {
   const snapshot = () => ({
     map, buildings: cityBuildings, extensions: cityExtensions,
     resources, population, happiness, homeless,
-    research, unlocked: new Set(unlockedBlds), hand,
+    research, unlocked: new Set(unlockedBlds), hand, mana,
   });
 
   const handlePlace = () => {
@@ -610,6 +617,7 @@ export default function Demo() {
     if (typeof last.research === 'number') setResearch(last.research);
     if (last.unlocked) setUnlockedBlds(last.unlocked);
     if (last.hand) setHand(last.hand);
+    if (typeof last.mana === 'number') setMana(last.mana);
     setMapHistory(mapHistory.slice(0, -1));
     addLog('↶ 撤回');
   };
@@ -967,7 +975,7 @@ export default function Demo() {
         // 地形产能档（加工建筑无地形 → 100%）
         let rate = 1;
         if (b.terrain) {
-          const share = buildingTerrainShare(map, city, cityExtensions[city.id], allBlds[city.id], b);
+          const share = buildingTerrainShare(map, city, cityExtensions[city.id], allBlds[city.id], b, conflictSet);
           rate = productionRate(share, b.need);
         }
         if (rate === 0) continue;
@@ -1052,13 +1060,23 @@ export default function Demo() {
     setHomeless(newHomeless);
     setCityBuildings(allBlds);
     setResearch(r => r + researchAdd);
+    setMana(m => m + MANA_PER_TURN);
     setTurn(turn + 1);
     setMapHistory([]);
-    setHand(generateHand());
     setFreeChanges(3); setFreeChangeMode(false); setFreeChangePicking(null);
     setRerollsLeft(2); setRerollSelected(new Set());
     setSelectedCardId(null); setRotation(0);
-    addLog(`━ 回合 ${turn + 1}｜🔬+${researchAdd}${popMsg}`);
+    addLog(`━ 回合 ${turn + 1}｜🔬+${researchAdd} 神力+${MANA_PER_TURN}${popMsg}`);
+  };
+
+  const handleDrawBatch = () => {
+    if (mana < MANA_PER_BATCH) return;
+    setMapHistory([...mapHistory, snapshot()]);
+    setMana(m => m - MANA_PER_BATCH);
+    setHand(generateHand());
+    setSelectedCardId(null);
+    setRerollSelected(new Set());
+    addLog(`🌍 世界改变（消耗 ${MANA_PER_BATCH} 神力 · 弃旧批抽新批）`);
   };
 
   const handleRotate = () => setRotation((rotation + 1) % 4);
@@ -1090,19 +1108,26 @@ export default function Demo() {
     addLog(`⟳ 随机了${rerollSelected.size}张卡（剩余${rerollsLeft - 1}次）`);
   };
 
-  // 城市运行状态（计算每座建筑的地形份额和产能档）
+  const conflicts = useMemo(() => getClimateConflicts(map), [map]);
+  const conflictSet = useMemo(() => {
+    const s = new Set();
+    conflicts.forEach(c => { s.add(`${c.x},${c.y}`); s.add(`${c.nx},${c.ny}`); });
+    return s;
+  }, [conflicts]);
+
+  // 城市运行状态（气候冲突格子不计入可用地形）
   const cityStatus = CITIES.map(city => {
     const extension = cityExtensions[city.id] || [];
     const terrainValues = {};
     for (const key of Object.keys(TERRAIN)) {
-      if (key === 'empty') continue;
-      const v = cityTerrainCountFull(map, city, extension, key);
+      if (key === 'empty' || TERRAIN[key].line === 'barren') continue;
+      const v = cityTerrainCountFull(map, city, extension, key, conflictSet);
       if (v > 0) terrainValues[key] = v;
     }
     const blds = cityBuildings[city.id] || [];
     const builtBuildings = blds.map(b => {
       if (!b.terrain) return { ...b, value: null, status: b.disabled ? 'disabled' : (b.halted ? 'halted' : 'ok') };
-      const share = buildingTerrainShare(map, city, extension, blds, b);
+      const share = buildingTerrainShare(map, city, extension, blds, b, conflictSet);
       let status;
       if (b.disabled) status = 'disabled';
       else if (b.halted) status = 'halted';
@@ -1113,10 +1138,6 @@ export default function Demo() {
     });
     return { ...city, terrainValues, buildings: builtBuildings, extension };
   });
-
-  const conflicts = useMemo(() => getClimateConflicts(map), [map]);
-  const conflictSet = new Set();
-  conflicts.forEach(c => { conflictSet.add(`${c.x},${c.y}`); conflictSet.add(`${c.nx},${c.ny}`); });
 
   const currentCityStatus = cityStatus.find(c => c.id === selectedCityId);
 
@@ -1129,7 +1150,7 @@ export default function Demo() {
         if (b.disabled) continue;
         let rate = 1;
         if (b.terrain) {
-          const share = buildingTerrainShare(map, city, cityExtensions[city.id], blds, b);
+          const share = buildingTerrainShare(map, city, cityExtensions[city.id], blds, b, conflictSet);
           rate = productionRate(share, b.need);
         }
         if (rate === 0) continue;
@@ -1158,7 +1179,7 @@ export default function Demo() {
         if (b.disabled) continue;
         let rate = 1;
         if (b.terrain) {
-          const share = buildingTerrainShare(map, c, cityExtensions[c.id], blds, b);
+          const share = buildingTerrainShare(map, c, cityExtensions[c.id], blds, b, conflictSet);
           rate = productionRate(share, b.need);
         }
         if (rate === 0) continue;
@@ -1236,10 +1257,14 @@ export default function Demo() {
             <span style={{ color: '#c9a961', fontSize: 16, fontWeight: 600, fontFamily: "'Noto Serif SC', serif" }}>
               建设与环境 · <span style={{ color: '#9c8f72' }}>回合 {turn}</span>
             </span>
+            <div style={{ display:'flex', gap: 4, alignItems:'center' }}>
+            <button onClick={() => setShowHelp(true)} style={{ ...btn(false), fontSize: 14 }}>❓ 说明</button>
+            <button onClick={() => setShowConsumption(true)} style={{ ...btn(false), fontSize: 14 }}>📊 消耗</button>
             <button onClick={() => {
               setMap(makeInitialMap());
               setMapHistory([]);
-              setHand(generateHand());
+              setHand([]);
+              setMana(MANA_INIT);
               setSelectedCardId(null);
               setRotation(0);
               setSelectedCityId('A');
@@ -1268,13 +1293,12 @@ export default function Demo() {
               setVictoryAck(false);
               addLog('━ 新局开始');
             }} style={{ ...btn(false), fontSize: 14 }}>重新开始</button>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <button onClick={() => setShowShop(true)} style={{ ...btn(false), fontSize: 14 }}>商店</button>
             <button onClick={() => setShowTech(true)} style={{ ...btn(false), fontSize: 14, background: '#7a9ab5', color: '#1a1812' }}>🔬 科技树 {research}</button>
             <span style={{ color:'#7a9ab5', fontSize: 15 }}>研究 <span style={{ color:'#7a9a4f', fontWeight:600 }}>+{researchPerTurn}</span>/回合</span>
-            <button onClick={() => setShowHelp(true)} style={{ ...btn(false), fontSize: 14 }}>❓ 说明</button>
-            <button onClick={() => setShowConsumption(true)} style={{ ...btn(false), fontSize: 14 }}>📊 消耗</button>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 17, flex: 1 }}>
               {RES_KEYS.filter(k => (resources[k] || 0) > 0 || (netChange[k] || 0) !== 0).map(k => {
                 const v = resources[k] || 0;
@@ -1539,10 +1563,15 @@ export default function Demo() {
           );
         })()}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr 540px', gap: 12, flex: 1, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr 460px', gap: 12, flex: 1, overflow: 'hidden' }}>
           {/* 左栏：操作面板 + 日志 */}
           <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <div style={{ ...panel, flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              {/* 神力展示条 */}
+              <div style={{ padding:'8px 10px', background:'#2b1d27', border:'1px solid #b07a9a', marginBottom: 8, display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink: 0 }}>
+                <span style={{ color:'#b07a9a', fontSize: 18, fontWeight: 600 }}>✨ 神力 {mana}</span>
+                <span style={{ color:'#9c8f72', fontSize: 13 }}>+{MANA_PER_TURN}/回合</span>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 6, flexShrink: 0 }}>
                 <h3 style={h3Style}>
                   {upgradeMode ? `升级 · ${upgradableRegions.length} 区域`
@@ -1637,7 +1666,15 @@ export default function Demo() {
                   )}
                 </div>
               ) : (
-                <div style={{ flex: 1, overflowY: 'auto' }}>
+                <div style={{ flex: 1 }}>
+                  {/* 世界改变按钮置顶 */}
+                  <div style={{ marginBottom: 10 }}>
+                    <button onClick={handleDrawBatch} disabled={mana < MANA_PER_BATCH}
+                      style={{ ...btn(mana < MANA_PER_BATCH), width: '100%', padding:'8px 14px', fontSize: 15, background: mana >= MANA_PER_BATCH ? '#b07a9a' : '#2b2619', color: mana >= MANA_PER_BATCH ? '#1a1812' : '#5a5140', fontWeight: 600 }}>
+                      🌍 世界改变
+                    </button>
+                    <div style={{ fontSize: 12, color: '#9c8f72', textAlign: 'center', marginTop: 3 }}>消耗 {MANA_PER_BATCH} 神力 抽 {HAND_SIZE} 张地形卡</div>
+                  </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                     {hand.map(card => {
                       const isRerollMarked = rerollSelected.has(card.id);
@@ -1671,11 +1708,18 @@ export default function Demo() {
                         </div>
                       );
                     })}
-                    {hand.length === 0 && <div style={{ color: '#9c8f72', fontSize: 14 }}>手牌用完</div>}
+                    {hand.length === 0 && <div style={{ color: '#9c8f72', fontSize: 14 }}>手牌空 · 点顶部按钮花神力抽批</div>}
                   </div>
                   {rerollSelected.size > 0 && (
                     <button onClick={handleReroll} disabled={rerollsLeft <= 0}
-                      style={{ ...primaryBtn, padding: '5px 12px', fontSize: 13 }}>
+                      style={{
+                        ...primaryBtn,
+                        padding: '5px 12px',
+                        fontSize: 13,
+                        background: rerollsLeft <= 0 ? '#2b2619' : primaryBtn.background,
+                        color: rerollsLeft <= 0 ? '#5a5140' : primaryBtn.color,
+                        cursor: rerollsLeft <= 0 ? 'not-allowed' : 'pointer',
+                      }}>
                       重抽{rerollSelected.size}张（{rerollsLeft}/2）
                     </button>
                   )}
@@ -1826,22 +1870,25 @@ export default function Demo() {
                 <span>3格同类相连可升级1格</span>
                 <span>⚡ 气候冲突：相邻气候差≥2档断开相连，无法升级</span>
               </div>
-              <div style={{ position: 'absolute', bottom: 12, right: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+              <div style={{ position: 'absolute', bottom: 56, right: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <button onClick={() => {
                   setExtendMode(!extendMode);
                   setExtendCityId(selectedCityId);
                   setExtendPending([]);
                   setUpgradeMode(false);
                   setFreeChangeMode(false);
-                }} style={{ ...btn(false), fontSize: 13, padding: '5px 10px', width: 200, background: extendMode ? '#c9a961' : '#3d3524', color: extendMode ? '#1a1812' : '#c9a961' }}>
-                  {extendMode ? `退出扩城（${extendPending.length}/${EXTEND_CELLS}）` : `扩城 · 选3格（🔧${EXTEND_COST.工具} 🌾${EXTEND_COST.粮食}）`}
+                }} style={{ ...btn(false), fontSize: 15, padding: '6px 16px', width: 130, background: extendMode ? '#c9a961' : '#3d3524', color: extendMode ? '#1a1812' : '#c9a961' }}>
+                  {extendMode ? `退出（${extendPending.length}/${EXTEND_CELLS}）` : '扩建城市'}
                 </button>
+                <div style={{ fontSize: 12, color: '#9c8f72', textAlign: 'right', lineHeight: 1.3 }}>
+                  选 {EXTEND_CELLS} 格 · 消耗 🔧{EXTEND_COST.工具} 🌾{EXTEND_COST.粮食}
+                </div>
                 {extendMode && extendPending.length > 0 && (
-                  <button onClick={handleConfirmExtend} style={{ ...btn(false), fontSize: 13, padding: '5px 10px', width: 200, background: '#7a9a4f', color: '#1a1812', fontWeight: 600 }}>
+                  <button onClick={handleConfirmExtend} style={{ ...btn(false), fontSize: 13, padding: '5px 10px', width: 180, background: '#7a9a4f', color: '#1a1812', fontWeight: 600 }}>
                     确认 · {CITIES.find(c => c.id === extendCityId).name} 扩 {extendPending.length} 格
                   </button>
                 )}
-                <div style={{ height: 8 }} />
+                <div style={{ height: 28 }} />
                 <button onClick={handleNextTurn} style={{ ...primaryBtn, fontSize: 16, padding: '12px 48px', width: '100%' }}>下一回合 ▶</button>
               </div>
             </div>
@@ -1894,15 +1941,25 @@ export default function Demo() {
                     {Object.entries(currentCityStatus.terrainValues).length === 0 ? (
                       <div style={{ fontSize: 14, color: '#5a5140', padding: '4px 6px', gridColumn: 'span 6' }}>无有效地形</div>
                     ) : (
-                      Object.entries(currentCityStatus.terrainValues).map(([key, v]) => (
-                        <div key={key} style={{ padding: '3px 5px', background: '#1a1812', fontSize: 13, display: 'flex', flexDirection:'column', alignItems:'center', borderLeft: `2px solid ${TERRAIN[key].color}` }}>
-                          <span style={{ color: '#e8dfc8', fontSize: 12 }}>
-                            {TERRAIN[key].name}
-                            {TERRAIN[key].tier >= 2 && <span style={{ color: '#9c8f72', fontSize: 11, marginLeft: 2 }}>{TERRAIN[key].tier === 2 ? 'II' : 'III'}</span>}
-                          </span>
-                          <span style={{ color: '#c9a961', fontWeight: 600, fontSize: 14 }}>{v}</span>
-                        </div>
-                      ))
+                      Object.entries(currentCityStatus.terrainValues).map(([key, v]) => {
+                        const bldsUsing = cityBlds.filter(b => !b.disabled && b.terrain === key);
+                        const n = bldsUsing.length;
+                        return (
+                          <div key={key} style={{ padding: '3px 5px', background: '#1a1812', fontSize: 13, display: 'flex', flexDirection:'column', alignItems:'center', borderLeft: `2px solid ${TERRAIN[key].color}` }}>
+                            <span style={{ color: '#e8dfc8', fontSize: 12 }}>
+                              {TERRAIN[key].name}
+                              {TERRAIN[key].tier >= 2 && <span style={{ color: '#9c8f72', fontSize: 11, marginLeft: 2 }}>{TERRAIN[key].tier === 2 ? 'II' : 'III'}</span>}
+                            </span>
+                            <span style={{ color: '#c9a961', fontWeight: 600, fontSize: 14 }}>{v}</span>
+                            {n > 0 ? (
+                              <>
+                                <span style={{ color: '#9c8f72', fontSize: 11, lineHeight: 1.2 }}>{n}🏛️</span>
+                                <span style={{ color: '#9c8f72', fontSize: 11, lineHeight: 1.2 }}>{(v/n).toFixed(1)}/🏛️</span>
+                              </>
+                            ) : <span style={{ color: '#3d3524', fontSize: 11 }}>未用</span>}
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </div>
@@ -1956,39 +2013,51 @@ export default function Demo() {
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:4 }}>
                             <div style={{ flex:1, minWidth: 0 }}>
                               <div style={{ fontSize: 15, color: '#e8dfc8', display:'flex', alignItems:'center', gap:5, flexWrap:'wrap' }}>
-                                <span>{b.name}{count > 1 && <span style={{ color:'#c9a961', marginLeft: 3 }}>×{count}</span>}</span>
-                                {b.disabled && <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>⏸停工</span>}
+                                <span>{b.name}</span>
+                                {b.disabled && (() => {
+                                  let extra = '';
+                                  if (b.autoDisabled && b.tier && b.popCost) {
+                                    const usage = calcCityPopUsage(cityBlds);
+                                    const free = (population[cityId][b.tier] || 0) - (usage[b.tier] || 0);
+                                    const shortage = b.popCost - free;
+                                    if (shortage > 0) extra = ` ·差${shortage}${b.tier}`;
+                                  }
+                                  return <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>⏸停工{extra}</span>;
+                                })()}
                                 {!b.disabled && b.halted && <span style={{ background:'#d4a85a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>⚠停产·原料</span>}
                                 {!b.disabled && !b.halted && stat === 'debuff25' && <span style={{ background:'#c9a961', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>🟡减产25%</span>}
                                 {!b.disabled && !b.halted && stat === 'stopped' && <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>✗停产·地形</span>}
                                 {isHouse && <span style={{ color: '#9c8f72', fontSize: 13 }}>{b.residents || 0}/{b.housing}{b.housingTier}</span>}
                               </div>
-                              {/* 产 / 耗 一排 */}
+                              <div style={{ display:'flex', alignItems:'center', gap:14, marginTop: 2 }}>
+                                <button onClick={() => handleDemolish(cityId, i)} style={{ ...btn(false), padding:'1px 6px', fontSize:11 }}>拆</button>
+                                {count > 1 && <span style={{ color:'#c9a961', fontSize: 12 }}>×{count}</span>}
+                              </div>
+                              {/* 产量 / 消耗 一排 */}
                               {(b.output && !b.housing) || b.input ? (
                                 <div style={{ fontSize: 13, color: '#9c8f72', display:'flex', gap:8, flexWrap:'wrap' }}>
-                                  {b.output && !b.housing && <span><span style={{ color:'#5a5140' }}>产</span> <span style={{ color:'#7a9a4f' }}>{Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}/回合</span></span>}
-                                  {b.input && <span><span style={{ color:'#5a5140' }}>耗</span> <span style={{ color:'#c25a3a' }}>{Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}</span></span>}
+                                  {b.output && !b.housing && <span><span style={{ color:'#5a5140' }}>产量</span> <span style={{ color:'#7a9a4f' }}>{Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}/回合</span></span>}
+                                  {b.input && <span><span style={{ color:'#5a5140' }}>消耗</span> <span style={{ color:'#c25a3a' }}>{Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}</span></span>}
                                 </div>
                               ) : null}
-                              {/* 需地形 / 占人口 一排 */}
+                              {/* 地形需求 / 占人口 一排 */}
                               {(b.terrain && share != null) || (b.tier && !b.housing) ? (
                                 <div style={{ fontSize: 13, display:'flex', gap:8, flexWrap:'wrap' }}>
-                                  {b.terrain && share != null && <span style={{ color:'#7a6e5a' }}><span style={{ color:'#5a5140' }}>需</span> {TERRAIN[b.terrain].name} {share.toFixed(1)}/{b.need}</span>}
-                                  {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占</span> {b.popCost}{b.tier}</span>}
+                                  {b.terrain && share != null && <span style={{ color:'#7a6e5a' }}><span style={{ color:'#5a5140' }}>地形需求</span> {TERRAIN[b.terrain].name} {b.need} <span style={{ color: stat === 'ok' ? '#7a9a4f' : stat === 'debuff25' ? '#c9a961' : '#c25a3a' }}>当前{share.toFixed(1)}</span></span>}
+                                  {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占人口</span> {b.popCost}{b.tier}</span>}
                                 </div>
                               ) : null}
                             </div>
                             <div style={{ display:'flex', flexDirection:'column', gap:2, flexShrink:0 }}>
-                              {canUpgrade && <button onClick={() => handleUpgradeHousing(cityId, i)} style={{ ...btn(false), padding:'1px 5px', fontSize:11, color:'#7a9ab5' }}>⬆升</button>}
+                              {canUpgrade && <button onClick={() => handleUpgradeHousing(cityId, i)} style={{ ...btn(false), padding:'1px 6px', fontSize:11, color:'#7a9ab5' }}>⬆升级</button>}
                               {isHouse && b.housingTier && TIER_ORDER.indexOf(b.housingTier) > 0 && (
-                                <button onClick={() => handleDowngradeHousing(cityId, i)} style={{ ...btn(false), padding:'1px 5px', fontSize:11, color:'#c9a961' }}>⬇降</button>
+                                <button onClick={() => handleDowngradeHousing(cityId, i)} style={{ ...btn(false), padding:'1px 6px', fontSize:11, color:'#c9a961' }}>⬇降级</button>
                               )}
                               {b.tier && !b.housing && (
-                                <button onClick={() => handleToggleBuilding(cityId, i)} disabled={b.disabled && !canEnable} style={{ ...btn(b.disabled && !canEnable), padding:'1px 5px', fontSize:11, color: b.disabled ? (canEnable ? '#7a9a4f' : '#5a5140') : '#c25a3a' }}>
-                                  {b.disabled ? '启' : '禁'}
+                                <button onClick={() => handleToggleBuilding(cityId, i)} disabled={b.disabled && !canEnable} style={{ ...btn(b.disabled && !canEnable), padding:'1px 6px', fontSize:11, color: b.disabled ? (canEnable ? '#7a9a4f' : '#5a5140') : '#c25a3a' }}>
+                                  {b.disabled ? '启用' : '禁用'}
                                 </button>
                               )}
-                              <button onClick={() => handleDemolish(cityId, i)} style={{ ...btn(false), padding:'1px 5px', fontSize:11 }}>拆</button>
                             </div>
                           </div>
                         </div>
@@ -2015,13 +2084,12 @@ export default function Demo() {
                       let preview = null;
                       if (b.terrain) {
                         const city = CITIES.find(cc => cc.id === cityId);
-                        const total = cityTerrainCountFull(map, city, cityExtensions[cityId], b.terrain);
+                        const total = cityTerrainCountFull(map, city, cityExtensions[cityId], b.terrain, conflictSet);
                         const sameCount = cityTerrainAllBlds.filter(x => !x.disabled && x.terrain === b.terrain).length + 1;
                         const share = total / sameCount;
                         const rate = productionRate(share, b.need);
-                        const label = rate === 1 ? '满产' : rate === 0.25 ? '减产25%' : '停产';
                         const col = rate === 1 ? '#7a9a4f' : rate === 0.25 ? '#c9a961' : '#c25a3a';
-                        preview = <span style={{ color: col, fontSize: 12 }}>→ {share.toFixed(1)}/{b.need} {label}</span>;
+                        preview = <span style={{ color: col, fontSize: 12 }}>当前{share.toFixed(1)} 效率{Math.round(rate*100)}%</span>;
                       }
                       return (
                         <div key={b.id} style={{ padding: '6px 8px', background: '#1a1812', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', opacity: resOk ? 1 : 0.5, borderLeft: `3px solid ${LEVEL_COLOR[b.tier] || '#5a5140'}`, minHeight: 76 }}>
@@ -2029,24 +2097,25 @@ export default function Demo() {
                             <div style={{ fontSize: 15, color: '#e8dfc8' }}>{b.name}</div>
                             {/* 产 / 耗 一排 */}
                             {(b.output) || b.input ? (
-                              <div style={{ fontSize: 13, color: '#9c8f72', display:'flex', gap:6, flexWrap:'wrap' }}>
-                                {b.output && <span><span style={{ color:'#5a5140' }}>产</span> <span style={{ color:'#7a9a4f' }}>{Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}/回合</span></span>}
-                                {b.input && <span><span style={{ color:'#5a5140' }}>耗</span> <span style={{ color:'#c25a3a' }}>{Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}</span></span>}
+                              <div style={{ fontSize: 13, color: '#9c8f72', display:'flex', gap:8, flexWrap:'wrap' }}>
+                                {b.output && <span><span style={{ color:'#5a5140' }}>产量</span> <span style={{ color:'#7a9a4f' }}>{Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}/回合</span></span>}
+                                {b.input && <span><span style={{ color:'#5a5140' }}>消耗</span> <span style={{ color:'#c25a3a' }}>{Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}</span></span>}
                               </div>
                             ) : null}
                             {!b.output && b.effect && <div style={{ fontSize: 13, color: '#9c8f72' }}>{b.effect}</div>}
-                            {/* 需地形 / 占人口 一排 */}
-                            {(b.terrain || (b.tier && !b.housing)) ? (
+                            {/* 地形需求 */}
+                            {b.terrain && <div style={{ fontSize: 13, color: LEVEL_COLOR[b.tier] }}>
+                              <span style={{ color:'#5a5140' }}>地形需求</span> {TERRAIN[b.terrain].name} {b.need}
+                              {preview && <span style={{ marginLeft: 4 }}>{preview}</span>}
+                            </div>}
+                            {!b.terrain && b.tier && b.output && <div style={{ fontSize: 13, color:'#5a5140' }}>加工·无地形</div>}
+                            {/* 建造成本 + 占用人口 一排 */}
+                            {(b.cost || (b.tier && !b.housing)) ? (
                               <div style={{ fontSize: 13, display:'flex', gap:8, flexWrap:'wrap' }}>
-                                {b.terrain && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>需</span> {TERRAIN[b.terrain].name}×{b.need}</span>}
-                                {!b.terrain && b.tier && b.output && <span style={{ color:'#5a5140' }}>加工·无地形</span>}
-                                {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占</span> {b.popCost}{b.tier}</span>}
+                                {b.cost && <span style={{ color: '#7a6e5a' }}><span style={{ color:'#5a5140' }}>建造成本</span> {Object.entries(b.cost).map(([r, a]) => <span key={r} style={{ color: (resources[r] || 0) >= a ? '#9c8f72' : '#c25a3a', marginLeft: 3 }}>{RES_ICON[r]}{a}</span>)}</span>}
+                                {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占人口</span> {b.popCost}{b.tier}</span>}
                               </div>
                             ) : null}
-                            {preview && <div style={{ fontSize: 13 }}>{preview}</div>}
-                            {b.cost && <div style={{ fontSize: 13, color: '#7a6e5a' }}>
-                              <span style={{ color:'#5a5140' }}>建</span> {Object.entries(b.cost).map(([r, a]) => <span key={r} style={{ color: (resources[r] || 0) >= a ? '#9c8f72' : '#c25a3a', marginLeft: 4 }}>{RES_ICON[r]}{a}</span>)}
-                            </div>}
                           </div>
                           <button onClick={() => handleBuild(cityId, b)} disabled={!resOk}
                             style={{ ...btn(!resOk), padding: '3px 8px', fontSize: 13, marginTop: 4, width: '100%' }}>
