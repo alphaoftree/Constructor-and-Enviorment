@@ -1890,25 +1890,25 @@ export default function Demo() {
                       <span style={{ color: '#9c8f72', fontSize: 15, marginLeft: 8 }}>（含扩{currentCityStatus.extension.length}格）</span>
                     )}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3 }}>
                     {Object.entries(currentCityStatus.terrainValues).length === 0 ? (
-                      <div style={{ fontSize: 15, color: '#5a5140', padding: '6px 10px', gridColumn: 'span 2' }}>无有效地形</div>
+                      <div style={{ fontSize: 14, color: '#5a5140', padding: '4px 6px', gridColumn: 'span 6' }}>无有效地形</div>
                     ) : (
                       Object.entries(currentCityStatus.terrainValues).map(([key, v]) => (
-                        <div key={key} style={{ padding: '5px 10px', background: '#1a1812', fontSize: 15, display: 'flex', justifyContent: 'space-between', borderLeft: `2px solid ${TERRAIN[key].color}` }}>
-                          <span style={{ color: '#e8dfc8' }}>
+                        <div key={key} style={{ padding: '3px 5px', background: '#1a1812', fontSize: 13, display: 'flex', flexDirection:'column', alignItems:'center', borderLeft: `2px solid ${TERRAIN[key].color}` }}>
+                          <span style={{ color: '#e8dfc8', fontSize: 12 }}>
                             {TERRAIN[key].name}
-                            {TERRAIN[key].tier >= 2 && <span style={{ color: '#9c8f72', fontSize: 13, marginLeft: 3 }}>{TERRAIN[key].tier === 2 ? 'II' : 'III'}</span>}
+                            {TERRAIN[key].tier >= 2 && <span style={{ color: '#9c8f72', fontSize: 11, marginLeft: 2 }}>{TERRAIN[key].tier === 2 ? 'II' : 'III'}</span>}
                           </span>
-                          <span style={{ color: '#c9a961', fontWeight: 600 }}>{v}</span>
+                          <span style={{ color: '#c9a961', fontWeight: 600, fontSize: 14 }}>{v}</span>
                         </div>
                       ))
                     )}
                   </div>
                 </div>
 
-                {/* 人口/幸福（一行显示） */}
-                <div style={{ marginBottom: 10, padding:'6px 10px', background:'#1a1812', fontSize:15, display:'flex', gap:14, flexWrap:'wrap' }}>
+                {/* 人口/幸福（一行居中） */}
+                <div style={{ marginBottom: 10, padding:'6px 10px', background:'#1a1812', fontSize:15, display:'flex', justifyContent:'space-around', alignItems:'center' }}>
                   {TIER_ORDER.map(tier => {
                     const h = happiness[cityId][tier];
                     const hColor = h >= 60 ? '#7a9a4f' : h >= 30 ? '#c9a961' : '#c25a3a';
@@ -1926,9 +1926,25 @@ export default function Demo() {
                   <div style={{ fontSize: 16, color: '#9c8f72', marginBottom: 6 }}>已建造 · {cityBlds.length}</div>
                   {cityBlds.length === 0 ? (
                     <div style={{ fontSize: 15, color: '#5a5140', padding: '6px 10px', background: '#1a1812' }}>尚未建造</div>
-                  ) : (
+                  ) : (() => {
+                    // 折叠满员住房：同 id + 满员 → 合并为一条；其余分开
+                    const displayList = [];
+                    const fullGroup = {};
+                    cityBlds.forEach((b, i) => {
+                      if (b.housing && (b.residents || 0) >= b.housing) {
+                        if (fullGroup[b.id] == null) {
+                          fullGroup[b.id] = displayList.length;
+                          displayList.push({ b, firstIdx: i, count: 1 });
+                        } else {
+                          displayList[fullGroup[b.id]].count += 1;
+                        }
+                      } else {
+                        displayList.push({ b, firstIdx: i, count: 1 });
+                      }
+                    });
+                    return (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
-                    {cityBlds.map((b, i) => {
+                    {displayList.map(({ b, firstIdx: i, count }) => {
                       const isHouse = !!b.housing;
                       const canUpgrade = isHouse && b.housingTier && TIER_ORDER.indexOf(b.housingTier) < 2 && (b.residents || 0) >= b.housing;
                       const canEnable = !b.disabled || !b.tier || b.popCost === 0 || ((population[cityId][b.tier] || 0) - (cityPopUsage[b.tier] || 0)) >= b.popCost;
@@ -1936,43 +1952,51 @@ export default function Demo() {
                       const borderColor = stat === 'ok' ? '#7a9a4f' : stat === 'debuff25' ? '#c9a961' : stat === 'halted' ? '#d4a85a' : stat === 'disabled' ? '#5a5140' : '#c25a3a';
                       const share = currentCityStatus.buildings[i] ? currentCityStatus.buildings[i].value : null;
                       return (
-                        <div key={i} style={{ padding: '5px 8px', background: b.disabled || b.halted ? '#141010' : '#1a1812', marginBottom: 3, borderLeft: `3px solid ${borderColor}`, opacity: b.disabled || b.halted ? 0.6 : 1 }}>
-                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize: 14, color: '#e8dfc8', display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                                <span>{b.name}</span>
-                                {b.disabled && <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 6px', fontSize:12, fontWeight:700 }}>⏸停工</span>}
-                                {!b.disabled && b.halted && <span style={{ background:'#d4a85a', color:'#1a1812', padding:'1px 6px', fontSize:12, fontWeight:700 }}>⚠停产·原料</span>}
-                                {!b.disabled && !b.halted && stat === 'debuff25' && <span style={{ background:'#c9a961', color:'#1a1812', padding:'1px 6px', fontSize:12, fontWeight:700 }}>🟡减产·产能25%</span>}
-                                {!b.disabled && !b.halted && stat === 'stopped' && <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 6px', fontSize:12, fontWeight:700 }}>✗停产·地形</span>}
-                                {isHouse && <span style={{ color: '#9c8f72', fontSize: 13 }}>{b.residents || 0}/{b.housing} {b.housingTier}</span>}
+                        <div key={i} style={{ padding: '6px 8px', background: b.disabled || b.halted ? '#141010' : '#1a1812', marginBottom: 3, borderLeft: `3px solid ${borderColor}`, opacity: b.disabled || b.halted ? 0.6 : 1 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:4 }}>
+                            <div style={{ flex:1, minWidth: 0 }}>
+                              <div style={{ fontSize: 15, color: '#e8dfc8', display:'flex', alignItems:'center', gap:5, flexWrap:'wrap' }}>
+                                <span>{b.name}{count > 1 && <span style={{ color:'#c9a961', marginLeft: 3 }}>×{count}</span>}</span>
+                                {b.disabled && <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>⏸停工</span>}
+                                {!b.disabled && b.halted && <span style={{ background:'#d4a85a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>⚠停产·原料</span>}
+                                {!b.disabled && !b.halted && stat === 'debuff25' && <span style={{ background:'#c9a961', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>🟡减产25%</span>}
+                                {!b.disabled && !b.halted && stat === 'stopped' && <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>✗停产·地形</span>}
+                                {isHouse && <span style={{ color: '#9c8f72', fontSize: 13 }}>{b.residents || 0}/{b.housing}{b.housingTier}</span>}
                               </div>
-                              <div style={{ fontSize: 13, color: '#9c8f72' }}>
-                                {b.output && !b.housing && Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}
-                                {b.input && ' · 耗' + Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}
-                                {b.terrain && share != null && <span style={{ marginLeft: 4, color:'#7a6e5a' }}>
-                                  · {TERRAIN[b.terrain].name} {share.toFixed(1)}/{b.need}
-                                </span>}
-                              </div>
+                              {/* 产 / 耗 一排 */}
+                              {(b.output && !b.housing) || b.input ? (
+                                <div style={{ fontSize: 13, color: '#9c8f72', display:'flex', gap:8, flexWrap:'wrap' }}>
+                                  {b.output && !b.housing && <span><span style={{ color:'#5a5140' }}>产</span> <span style={{ color:'#7a9a4f' }}>{Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}/回合</span></span>}
+                                  {b.input && <span><span style={{ color:'#5a5140' }}>耗</span> <span style={{ color:'#c25a3a' }}>{Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}</span></span>}
+                                </div>
+                              ) : null}
+                              {/* 需地形 / 占人口 一排 */}
+                              {(b.terrain && share != null) || (b.tier && !b.housing) ? (
+                                <div style={{ fontSize: 13, display:'flex', gap:8, flexWrap:'wrap' }}>
+                                  {b.terrain && share != null && <span style={{ color:'#7a6e5a' }}><span style={{ color:'#5a5140' }}>需</span> {TERRAIN[b.terrain].name} {share.toFixed(1)}/{b.need}</span>}
+                                  {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占</span> {b.popCost}{b.tier}</span>}
+                                </div>
+                              ) : null}
                             </div>
-                            <div style={{ display:'flex', gap:3, flexShrink:0 }}>
-                              {canUpgrade && <button onClick={() => handleUpgradeHousing(cityId, i)} style={{ ...btn(false), padding:'2px 6px', fontSize:12, color:'#7a9ab5' }}>⬆升级</button>}
+                            <div style={{ display:'flex', flexDirection:'column', gap:2, flexShrink:0 }}>
+                              {canUpgrade && <button onClick={() => handleUpgradeHousing(cityId, i)} style={{ ...btn(false), padding:'1px 5px', fontSize:11, color:'#7a9ab5' }}>⬆升</button>}
                               {isHouse && b.housingTier && TIER_ORDER.indexOf(b.housingTier) > 0 && (
-                                <button onClick={() => handleDowngradeHousing(cityId, i)} style={{ ...btn(false), padding:'2px 6px', fontSize:12, color:'#c9a961' }}>⬇降级</button>
+                                <button onClick={() => handleDowngradeHousing(cityId, i)} style={{ ...btn(false), padding:'1px 5px', fontSize:11, color:'#c9a961' }}>⬇降</button>
                               )}
                               {b.tier && !b.housing && (
-                                <button onClick={() => handleToggleBuilding(cityId, i)} disabled={b.disabled && !canEnable} style={{ ...btn(b.disabled && !canEnable), padding:'2px 6px', fontSize:12, color: b.disabled ? (canEnable ? '#7a9a4f' : '#5a5140') : '#c25a3a' }}>
-                                  {b.disabled ? '启用' : '禁用'}
+                                <button onClick={() => handleToggleBuilding(cityId, i)} disabled={b.disabled && !canEnable} style={{ ...btn(b.disabled && !canEnable), padding:'1px 5px', fontSize:11, color: b.disabled ? (canEnable ? '#7a9a4f' : '#5a5140') : '#c25a3a' }}>
+                                  {b.disabled ? '启' : '禁'}
                                 </button>
                               )}
-                              <button onClick={() => handleDemolish(cityId, i)} style={{ ...btn(false), padding:'2px 6px', fontSize:13 }}>拆</button>
+                              <button onClick={() => handleDemolish(cityId, i)} style={{ ...btn(false), padding:'1px 5px', fontSize:11 }}>拆</button>
                             </div>
                           </div>
                         </div>
                       );
                     })}
                     </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 <div>
@@ -2002,20 +2026,26 @@ export default function Demo() {
                       return (
                         <div key={b.id} style={{ padding: '6px 8px', background: '#1a1812', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', opacity: resOk ? 1 : 0.5, borderLeft: `3px solid ${LEVEL_COLOR[b.tier] || '#5a5140'}`, minHeight: 76 }}>
                           <div>
-                            <div style={{ fontSize: 15, color: '#e8dfc8' }}>
-                              {b.name}
-                              {b.terrain && <div style={{ color: LEVEL_COLOR[b.tier], fontSize: 13 }}>需 {TERRAIN[b.terrain].name}×{b.need}</div>}
-                              {!b.terrain && b.tier && b.output && <div style={{ color: '#5a5140', fontSize: 13 }}>加工·无地形</div>}
-                            </div>
-                            <div style={{ fontSize: 13, color: '#9c8f72' }}>
-                              {b.output && Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}
-                              {b.input && ' · 耗' + Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}
-                              {!b.output && b.effect}
-                            </div>
-                            {b.tier && <div style={{ fontSize: 13, color: LEVEL_COLOR[b.tier] }}>占{b.popCost}{b.tier}</div>}
+                            <div style={{ fontSize: 15, color: '#e8dfc8' }}>{b.name}</div>
+                            {/* 产 / 耗 一排 */}
+                            {(b.output) || b.input ? (
+                              <div style={{ fontSize: 13, color: '#9c8f72', display:'flex', gap:6, flexWrap:'wrap' }}>
+                                {b.output && <span><span style={{ color:'#5a5140' }}>产</span> <span style={{ color:'#7a9a4f' }}>{Object.entries(b.output).map(([r, a]) => `${RES_ICON[r]}+${a}`).join(' ')}/回合</span></span>}
+                                {b.input && <span><span style={{ color:'#5a5140' }}>耗</span> <span style={{ color:'#c25a3a' }}>{Object.entries(b.input).map(([r, a]) => `${RES_ICON[r]}${a}`).join(' ')}</span></span>}
+                              </div>
+                            ) : null}
+                            {!b.output && b.effect && <div style={{ fontSize: 13, color: '#9c8f72' }}>{b.effect}</div>}
+                            {/* 需地形 / 占人口 一排 */}
+                            {(b.terrain || (b.tier && !b.housing)) ? (
+                              <div style={{ fontSize: 13, display:'flex', gap:8, flexWrap:'wrap' }}>
+                                {b.terrain && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>需</span> {TERRAIN[b.terrain].name}×{b.need}</span>}
+                                {!b.terrain && b.tier && b.output && <span style={{ color:'#5a5140' }}>加工·无地形</span>}
+                                {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占</span> {b.popCost}{b.tier}</span>}
+                              </div>
+                            ) : null}
                             {preview && <div style={{ fontSize: 13 }}>{preview}</div>}
                             {b.cost && <div style={{ fontSize: 13, color: '#7a6e5a' }}>
-                              {Object.entries(b.cost).map(([r, a]) => <span key={r} style={{ color: (resources[r] || 0) >= a ? '#9c8f72' : '#c25a3a', marginRight: 4 }}>{RES_ICON[r]}{a}</span>)}
+                              <span style={{ color:'#5a5140' }}>建</span> {Object.entries(b.cost).map(([r, a]) => <span key={r} style={{ color: (resources[r] || 0) >= a ? '#9c8f72' : '#c25a3a', marginLeft: 4 }}>{RES_ICON[r]}{a}</span>)}
                             </div>}
                           </div>
                           <button onClick={() => handleBuild(cityId, b)} disabled={!resOk}
