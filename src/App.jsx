@@ -1063,8 +1063,6 @@ export default function Demo() {
     setMana(m => m + MANA_PER_TURN);
     setTurn(turn + 1);
     setMapHistory([]);
-    setFreeChanges(3); setFreeChangeMode(false); setFreeChangePicking(null);
-    setRerollsLeft(2); setRerollSelected(new Set());
     setSelectedCardId(null); setRotation(0);
     addLog(`━ 回合 ${turn + 1}｜🔬+${researchAdd} 神力+${MANA_PER_TURN}${popMsg}`);
   };
@@ -1076,7 +1074,9 @@ export default function Demo() {
     setHand(generateHand());
     setSelectedCardId(null);
     setRerollSelected(new Set());
-    addLog(`🌍 世界改变（消耗 ${MANA_PER_BATCH} 神力 · 弃旧批抽新批）`);
+    setRerollsLeft(2);
+    setFreeChanges(3); setFreeChangeMode(false); setFreeChangePicking(null);
+    addLog(`🌍 世界改变（消耗 ${MANA_PER_BATCH} 神力 · 弃旧批抽新批 · 改造/重抽回满）`);
   };
 
   const handleRotate = () => setRotation((rotation + 1) % 4);
