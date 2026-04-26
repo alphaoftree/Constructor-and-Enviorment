@@ -399,9 +399,10 @@ const getClimateConflicts = (map) => {
 };
 
 // 找所有可升级的连通区域
-// 返回：[{ key, cells: [[x,y],...], canUpgrade: 数量 }, ...]
+// 一个 line 的同一大片（tier N + N+1 相连）视为一个 patch：
+//   maxUpgrades = floor(patchSize / 3)，canUpgrade = maxUpgrades - 已升数
+// 返回：[{ key, line, startTier, cells: 可选L(N)格, higherCells: 已升L(N+1)格, totalSize, higherCount, canUpgrade }, ...]
 const findUpgradableRegions = (map) => {
-  // 先算出所有有气候冲突的格子
   const conflictCells = new Set();
   const citySet = new Set(CITIES.map(c => `${c.x},${c.y}`));
   for (let y = 0; y < 10; y++) {
@@ -423,45 +424,75 @@ const findUpgradableRegions = (map) => {
     }
   }
 
-  const visited = Array.from({ length: 10 }, () => Array(10).fill(false));
   const regions = [];
 
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
-      if (visited[y][x]) continue;
-      const key = map[y][x];
-      const t = TERRAIN[key];
-      if (t.tier === 0 || t.tier === 3 || t.line === 'barren') continue;
-      if (citySet.has(`${x},${y}`)) continue;
-      if (conflictCells.has(`${x},${y}`)) continue;
+  // 分两轮：startTier=1（L1→L2）和 startTier=2（L2→L3）
+  // 同一条 line 的所有 tier（1/2/3）相连算一个 patch
+  //   L1-region：上限 = floor(patchSize/3)，已升 = L2+L3 数；可选=L1
+  //   L2-region：上限 = floor(patchSize/9)，已升 = L3 数；可选=L2
+  for (const startTier of [1, 2]) {
+    const visited = Array.from({ length: 10 }, () => Array(10).fill(false));
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x < 10; x++) {
+        if (visited[y][x]) continue;
+        const key = map[y][x];
+        const t = TERRAIN[key];
+        if (t.tier !== startTier) continue;
+        if (t.line === 'barren' || t.line === 'empty') continue;
+        if (citySet.has(`${x},${y}`)) continue;
+        if (conflictCells.has(`${x},${y}`)) continue;
 
-      const cells = [];
-      const stack = [[x, y]];
-      while (stack.length) {
-        const [cx, cy] = stack.pop();
-        if (cx < 0 || cx >= 10 || cy < 0 || cy >= 10) continue;
-        if (visited[cy][cx]) continue;
-        // 气候冲突格子断开，不纳入
-        if (conflictCells.has(`${cx},${cy}`)) continue;
+        const line = t.line;
+        const cellsByTier = { 1: [], 2: [], 3: [] };
+        const stack = [[x, y]];
+        while (stack.length) {
+          const [cx, cy] = stack.pop();
+          if (cx < 0 || cx >= 10 || cy < 0 || cy >= 10) continue;
+          if (visited[cy][cx]) continue;
+          if (conflictCells.has(`${cx},${cy}`)) continue;
 
-        const cellKey = `${cx},${cy}`;
-        const isCity = citySet.has(cellKey);
+          if (citySet.has(`${cx},${cy}`)) {
+            visited[cy][cx] = true;
+            stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+            continue;
+          }
 
-        if (isCity) {
-          // 城市格子：视为万能连接器，标记已访问但不加入cells，继续扩展
+          const ct = TERRAIN[map[cy][cx]];
+          if (ct.line !== line) continue;
+          if (ct.tier !== 1 && ct.tier !== 2 && ct.tier !== 3) continue;
+
           visited[cy][cx] = true;
+          cellsByTier[ct.tier].push([cx, cy]);
           stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
-          continue;
         }
 
-        if (map[cy][cx] !== key) continue;
-        visited[cy][cx] = true;
-        cells.push([cx, cy]);
-        stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
-      }
-      const canUpgrade = Math.floor(cells.length / 3);
-      if (canUpgrade >= 1) {
-        regions.push({ key, cells, canUpgrade });
+        const totalSize = cellsByTier[1].length + cellsByTier[2].length + cellsByTier[3].length;
+        let maxUpgrades, higherCount, lowCells, higherCells;
+        if (startTier === 1) {
+          lowCells = cellsByTier[1];
+          higherCells = [...cellsByTier[2], ...cellsByTier[3]];
+          maxUpgrades = Math.floor(totalSize / 3);
+          higherCount = higherCells.length;
+        } else { // startTier === 2
+          lowCells = cellsByTier[2];
+          higherCells = cellsByTier[3];
+          maxUpgrades = Math.floor(totalSize / 9);
+          higherCount = higherCells.length;
+        }
+        const canUpgrade = Math.max(0, maxUpgrades - higherCount);
+
+        if (lowCells.length > 0 && maxUpgrades >= 1) {
+          regions.push({
+            key, line, startTier,
+            cells: lowCells,
+            higherCells,
+            totalSize,
+            higherCount,
+            maxUpgrades,
+            canUpgrade,
+            tierCounts: { 1: cellsByTier[1].length, 2: cellsByTier[2].length, 3: cellsByTier[3].length },
+          });
+        }
       }
     }
   }
@@ -472,6 +503,13 @@ const upgradeTarget = (key) => {
   const t = TERRAIN[key];
   for (const [k, v] of Object.entries(TERRAIN)) {
     if (v.line === t.line && v.tier === t.tier + 1) return k;
+  }
+  return null;
+};
+
+const terrainKeyOf = (line, tier) => {
+  for (const [k, v] of Object.entries(TERRAIN)) {
+    if (v.line === line && v.tier === tier) return k;
   }
   return null;
 };
@@ -1618,7 +1656,15 @@ export default function Demo() {
                   {activeRegion ? (
                     <div style={{ background: '#1a1812', padding: 10, marginBottom: 8 }}>
                       <div style={{ fontSize: 16, color: '#e8dfc8', marginBottom: 4 }}>
-                        {TERRAIN[activeRegion.key].name}（{activeRegion.cells.length}格）→ {TERRAIN[upgradeTarget(activeRegion.key)].name}
+                        {TERRAIN[activeRegion.key].name} → {TERRAIN[upgradeTarget(activeRegion.key)].name}
+                      </div>
+                      <div style={{ fontSize: 14, color: '#9c8f72', marginBottom: 4 }}>
+                        区域共 <span style={{ color: '#c9a961' }}>{activeRegion.totalSize}</span> 格（{
+                          [1,2,3].filter(tr => activeRegion.tierCounts[tr] > 0).map(tr => {
+                            const k = terrainKeyOf(activeRegion.line, tr);
+                            return `${activeRegion.tierCounts[tr]} ${k ? TERRAIN[k].name : ''}`;
+                          }).join(' + ')
+                        }）· 上限 {activeRegion.maxUpgrades}
                       </div>
                       <div style={{ fontSize: 16, color: '#9c8f72', marginBottom: 6 }}>
                         可升 <span style={{ color: '#c9a961' }}>{activeRegion.canUpgrade}</span> 格 · 已选 <span style={{ color: '#7a9a4f' }}>{upgradeSelections.length}</span>
@@ -1764,7 +1810,10 @@ export default function Demo() {
                     const hasConflict = conflictSet.has(`${x},${y}`);
 
                     // 升级模式相关
-                    const inActiveRegion = upgradeMode && activeRegion && activeRegion.cells.some(([cx,cy]) => cx === x && cy === y);
+                    const inActiveRegion = upgradeMode && activeRegion && (
+                      activeRegion.cells.some(([cx,cy]) => cx === x && cy === y) ||
+                      (activeRegion.higherCells || []).some(([cx,cy]) => cx === x && cy === y)
+                    );
                     const isUpgradeSelection = upgradeSelections.some(([cx,cy]) => cx === x && cy === y);
                     const canUpgradeHere = upgradeMode && !city && regionMap[`${x},${y}`] !== undefined;
 
@@ -1805,7 +1854,11 @@ export default function Demo() {
                       }
                       if (regionMap[`${x},${y}`] !== undefined) {
                         const r = upgradableRegions[regionMap[`${x},${y}`]];
-                        tooltip += `\n所在区域：${r.cells.length}格相连，当前可升级${r.canUpgrade}格`;
+                        const parts = [1,2,3].filter(tr => r.tierCounts[tr] > 0).map(tr => {
+                          const k = terrainKeyOf(r.line, tr);
+                          return `${r.tierCounts[tr]}${k ? TERRAIN[k].name : ''}`;
+                        });
+                        tooltip += `\n所在区域：共${r.totalSize}格（${parts.join('+')}）· 上限${r.maxUpgrades}·可升${r.canUpgrade}`;
                       }
                       if (hasConflict) tooltip += '\n⚡ 气候冲突：与相邻地形气候差≥2档，不计入相连（断开）';
                     }
