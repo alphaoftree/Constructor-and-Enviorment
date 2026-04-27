@@ -50,13 +50,16 @@ const LEVEL_COLOR = {
   深刻: '#b07a9a',  // 烟紫
 };
 
+const MAP_W = 10;
+const MAP_H = 12;
+
 const CITIES = [
   { id: 'A', name: '粮木城', x: 2, y: 2 },
-  { id: 'B', name: '药木城', x: 7, y: 2 },
-  { id: 'C', name: '铁工城', x: 2, y: 5 },
-  { id: 'D', name: '云港城', x: 7, y: 5 },
-  { id: 'E', name: '灰谷城', x: 2, y: 8 },
-  { id: 'F', name: '碧潮城', x: 7, y: 8 },
+  { id: 'B', name: '药木城', x: 8, y: 2 },
+  { id: 'C', name: '铁工城', x: 2, y: 6 },
+  { id: 'D', name: '云港城', x: 8, y: 6 },
+  { id: 'E', name: '灰谷城', x: 2, y: 10 },
+  { id: 'F', name: '碧潮城', x: 8, y: 10 },
 ];
 
 const getCityArea = (city) => {
@@ -64,7 +67,7 @@ const getCityArea = (city) => {
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
       const x = city.x + dx, y = city.y + dy;
-      if (x >= 0 && x < 10 && y >= 0 && y < 10) area.push([x, y]);
+      if (x >= 0 && x < MAP_W && y >= 0 && y < MAP_H) area.push([x, y]);
     }
   }
   return area;
@@ -97,13 +100,13 @@ const SHOP_NO_BUY  = ['宝石','古董'];
 // 字段：id/name/tier(占哪档人口)/popCost/output/input?/cost(建造资源)/terrain?+need?(地形需求)/line/grade
 const BUILDINGS = [
   // 粮食（粗浅）
-  { id:'farm',   name:'农田',     tier:'粗浅', popCost:5,  output:{ 粮食:4 },  cost:{ 木材:2 },                   terrain:'plain',  need:3, line:'粮食', grade:1 },
-  { id:'farm2',  name:'大农场',   tier:'粗浅', popCost:10, output:{ 粮食:12 }, cost:{ 木材:12, 石头:4 },          terrain:'rich',   need:2, line:'粮食', grade:2 },
-  { id:'farm3',  name:'神佑农场', tier:'粗浅', popCost:25, output:{ 粮食:40 }, cost:{ 木材:48, 石头:24, 铁:8 },   terrain:'black',  need:1, line:'粮食', grade:3 },
+  { id:'farm',   name:'农田',     tier:'粗浅', popCost:5,  output:{ 粮食:6 },  cost:{ 木材:2 },                   terrain:'plain',  need:3, line:'粮食', grade:1 },
+  { id:'farm2',  name:'大农场',   tier:'粗浅', popCost:10, output:{ 粮食:14 }, cost:{ 木材:12, 石头:4 },          terrain:'rich',   need:2, line:'粮食', grade:2 },
+  { id:'farm3',  name:'神佑农场', tier:'粗浅', popCost:25, output:{ 粮食:42 }, cost:{ 木材:48, 石头:24, 铁:8 },   terrain:'black',  need:1, line:'粮食', grade:3 },
   // 木材（粗浅）
-  { id:'wood',   name:'伐木场',   tier:'粗浅', popCost:5,  output:{ 木材:2 },  cost:{ 木材:2 },                   terrain:'forest',  need:3, line:'木材', grade:1 },
-  { id:'wood2',  name:'锯木厂',   tier:'粗浅', popCost:10, output:{ 木材:6 },  cost:{ 木材:8, 石头:4 },           terrain:'deepwood',need:2, line:'木材', grade:2 },
-  { id:'wood3',  name:'古木坊',   tier:'粗浅', popCost:25, output:{ 木材:20 }, cost:{ 木材:36, 石头:24, 铁:8 },   terrain:'ancient', need:1, line:'木材', grade:3 },
+  { id:'wood',   name:'伐木场',   tier:'粗浅', popCost:5,  output:{ 木材:4 },  cost:{ 木材:2 },                   terrain:'forest',  need:3, line:'木材', grade:1 },
+  { id:'wood2',  name:'锯木厂',   tier:'粗浅', popCost:10, output:{ 木材:8 },  cost:{ 木材:8, 石头:4 },           terrain:'deepwood',need:2, line:'木材', grade:2 },
+  { id:'wood3',  name:'古木坊',   tier:'粗浅', popCost:25, output:{ 木材:22 }, cost:{ 木材:36, 石头:24, 铁:8 },   terrain:'ancient', need:1, line:'木材', grade:3 },
   // 石头（粗浅）
   { id:'stone',  name:'采石场',   tier:'粗浅', popCost:5,  output:{ 石头:2 },  cost:{ 木材:3 },                   terrain:'hill',   need:3, line:'石头', grade:1 },
   { id:'stone2', name:'石料厂',   tier:'粗浅', popCost:10, output:{ 石头:6 },  cost:{ 木材:10, 石头:4 },          terrain:'mount',  need:2, line:'石头', grade:2 },
@@ -116,9 +119,9 @@ const BUILDINGS = [
   { id:'fish',   name:'渔场',     tier:'粗浅', popCost:5,  output:{ 肉食:3 },  cost:{ 木材:3 },                   terrain:'marsh', need:3, line:'渔', grade:1 },
   { id:'fish2',  name:'大渔场',   tier:'粗浅', popCost:10, output:{ 肉食:9 },  cost:{ 木材:16, 石头:4 },          terrain:'river', need:2, line:'渔', grade:2 },
   { id:'fish3',  name:'海港',     tier:'粗浅', popCost:25, output:{ 肉食:30 }, cost:{ 木材:72, 石头:24, 铁:8 },   terrain:'lake',  need:1, line:'渔', grade:3 },
-  // 铁（严肃，二三档 共寒冷线）
-  { id:'iron2',  name:'矿场',     tier:'严肃', popCost:8,  output:{ 铁:9 },   cost:{ 木材:16, 石头:8 },           terrain:'ice',    need:2, line:'铁', grade:2 },
-  { id:'iron3',  name:'深矿',     tier:'严肃', popCost:15, output:{ 铁:30 },  cost:{ 木材:72, 石头:48, 铁:16 },   terrain:'frozen', need:1, line:'铁', grade:3 },
+  // 铁（严肃，二三档 共丘陵线）
+  { id:'iron2',  name:'矿场',     tier:'严肃', popCost:8,  output:{ 铁:9 },   cost:{ 木材:16, 石头:8 },           terrain:'mount', need:2, line:'铁', grade:2 },
+  { id:'iron3',  name:'深矿',     tier:'严肃', popCost:15, output:{ 铁:30 },  cost:{ 木材:72, 石头:48, 铁:16 },   terrain:'snow',  need:1, line:'铁', grade:3 },
   // 工具（严肃，加工无地形）
   { id:'tool2',  name:'工坊',     tier:'严肃', popCost:8,  output:{ 工具:6 },  input:{ 铁:3 },   cost:{ 木材:6, 石头:10 },                    line:'工具', grade:2 },
   { id:'tool3',  name:'铸造厂',   tier:'严肃', popCost:15, output:{ 工具:20 }, input:{ 铁:10 },  cost:{ 木材:30, 石头:30, 铁:10 },            line:'工具', grade:3 },
@@ -129,8 +132,7 @@ const BUILDINGS = [
   { id:'cloth2', name:'裁缝铺',   tier:'深刻', popCost:8,  output:{ 衣服:2 },  input:{ 皮革:3 },   cost:{ 木材:16, 石头:4 },                  line:'衣服', grade:2 },
   { id:'cloth3', name:'制衣车间', tier:'深刻', popCost:15, output:{ 衣服:10 }, input:{ 皮革:15 },  cost:{ 木材:72, 石头:24, 铁:8 },           line:'衣服', grade:3 },
   // 魔晶（深刻，加工无地形）
-  { id:'crys2',  name:'炼金塔',   tier:'深刻', popCost:8,  output:{ 魔晶:6 },  input:{ 铁:6, 药草:9 },    cost:{ 木材:30, 石头:50 },                    line:'魔晶', grade:2 },
-  { id:'crys3',  name:'魔晶工坊', tier:'深刻', popCost:15, output:{ 魔晶:20 }, input:{ 铁:20, 药草:30 },  cost:{ 木材:90, 石头:200, 铁:60 },            line:'魔晶', grade:3 },
+  { id:'crys3',  name:'炼金塔', tier:'深刻', popCost:25, output:{ 魔晶:20 }, input:{ 铁:20, 药草:30 },  cost:{ 木材:90, 石头:200, 铁:60 },            line:'魔晶', grade:3 },
 ];
 
 // ===== 功能建筑 =====
@@ -170,17 +172,17 @@ const MANA_PER_BATCH = 3;
 // 简化柏林噪声：生成平滑的2D值场
 // 通过几个随机锚点+距离插值模拟
 const makeNoiseField = (numAnchors = 8, smoothness = 1.5) => {
-  const field = Array.from({ length: 10 }, () => Array(10).fill(0));
+  const field = Array.from({ length: MAP_H }, () => Array(MAP_W).fill(0));
   const anchors = [];
   for (let i = 0; i < numAnchors; i++) {
     anchors.push({
-      x: Math.random() * 10,
-      y: Math.random() * 10,
+      x: Math.random() * MAP_W,
+      y: Math.random() * MAP_H,
       value: Math.random(),
     });
   }
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
       let weightSum = 0;
       let valSum = 0;
       for (const a of anchors) {
@@ -189,37 +191,35 @@ const makeNoiseField = (numAnchors = 8, smoothness = 1.5) => {
         weightSum += w;
         valSum += w * a.value;
       }
-      // 叠加高频噪声让边界更碎
       field[y][x] = valSum / weightSum + (Math.random() - 0.5) * 0.15;
     }
   }
   let min = Infinity, max = -Infinity;
-  for (let y = 0; y < 10; y++) for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) {
     if (field[y][x] < min) min = field[y][x];
     if (field[y][x] > max) max = field[y][x];
   }
   const range = max - min || 1;
-  for (let y = 0; y < 10; y++) for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) {
     field[y][x] = (field[y][x] - min) / range;
   }
   return field;
 };
 
 const makeInitialMap = () => {
-  const m = Array.from({ length: 10 }, () => Array(10).fill('empty'));
+  const m = Array.from({ length: MAP_H }, () => Array(MAP_W).fill('empty'));
 
-  // 三张独立噪声图，更多锚点+更低平滑度 → 更碎片
   const tempNoise = makeNoiseField(8, 1.5);
-  const temp = Array.from({ length: 10 }, () => Array(10).fill(0));
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
-      temp[y][x] = 0.55 * (y / 9) + 0.45 * tempNoise[y][x];
+  const temp = Array.from({ length: MAP_H }, () => Array(MAP_W).fill(0));
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
+      temp[y][x] = 0.55 * (y / (MAP_H - 1)) + 0.45 * tempNoise[y][x];
     }
   }
   const elev = makeNoiseField(6, 1.8);
   const humid = makeNoiseField(7, 1.5);
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
       const t = temp[y][x];
       const e = elev[y][x];
       const h = humid[y][x];
@@ -260,10 +260,9 @@ const makeInitialMap = () => {
     }
   }
 
-  // 固定60%荒地：先收集所有非城市格子，随机选60%变荒地
   const nonCityCells = [];
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
       if (!CITIES.some(c => c.x === x && c.y === y)) nonCityCells.push([x, y]);
     }
   }
@@ -294,7 +293,7 @@ const SHAPES = {
 // 卡片生成
 const SHAPE_KEYS = Object.keys(SHAPES);
 const BASE_TERRAINS = ['plain', 'forest', 'hill', 'grass', 'marsh', 'tundra'];
-const HAND_SIZE = 8;
+const HAND_SIZE = 3;
 
 let cardCounter = Date.now();
 const generateCard = () => {
@@ -380,14 +379,14 @@ const cityLineValue = (map, city, line) => {
 const getClimateConflicts = (map) => {
   const conflicts = [];
   const citySet = new Set(CITIES.map(c => `${c.x},${c.y}`));
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
       if (citySet.has(`${x},${y}`)) continue;
       const t = TERRAIN[map[y][x]];
       if (t.climate === 0) continue;
       for (const [dx, dy] of [[1,0],[0,1]]) {
         const nx = x + dx, ny = y + dy;
-        if (nx >= 10 || ny >= 10) continue;
+        if (nx >= MAP_W || ny >= MAP_H) continue;
         if (citySet.has(`${nx},${ny}`)) continue;
         const nt = TERRAIN[map[ny][nx]];
         if (nt.climate === 0) continue;
@@ -405,14 +404,14 @@ const getClimateConflicts = (map) => {
 const findUpgradableRegions = (map) => {
   const conflictCells = new Set();
   const citySet = new Set(CITIES.map(c => `${c.x},${c.y}`));
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < MAP_H; y++) {
+    for (let x = 0; x < MAP_W; x++) {
       if (citySet.has(`${x},${y}`)) continue;
       const t = TERRAIN[map[y][x]];
       if (t.climate === 0) continue;
       for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
         const nx = x + dx, ny = y + dy;
-        if (nx < 0 || nx >= 10 || ny < 0 || ny >= 10) continue;
+        if (nx < 0 || nx >= MAP_W || ny < 0 || ny >= MAP_H) continue;
         if (citySet.has(`${nx},${ny}`)) continue;
         const nt = TERRAIN[map[ny][nx]];
         if (nt.climate === 0) continue;
@@ -426,14 +425,10 @@ const findUpgradableRegions = (map) => {
 
   const regions = [];
 
-  // 分两轮：startTier=1（L1→L2）和 startTier=2（L2→L3）
-  // 同一条 line 的所有 tier（1/2/3）相连算一个 patch
-  //   L1-region：上限 = floor(patchSize/3)，已升 = L2+L3 数；可选=L1
-  //   L2-region：上限 = floor(patchSize/9)，已升 = L3 数；可选=L2
   for (const startTier of [1, 2]) {
-    const visited = Array.from({ length: 10 }, () => Array(10).fill(false));
-    for (let y = 0; y < 10; y++) {
-      for (let x = 0; x < 10; x++) {
+    const visited = Array.from({ length: MAP_H }, () => Array(MAP_W).fill(false));
+    for (let y = 0; y < MAP_H; y++) {
+      for (let x = 0; x < MAP_W; x++) {
         if (visited[y][x]) continue;
         const key = map[y][x];
         const t = TERRAIN[key];
@@ -447,7 +442,7 @@ const findUpgradableRegions = (map) => {
         const stack = [[x, y]];
         while (stack.length) {
           const [cx, cy] = stack.pop();
-          if (cx < 0 || cx >= 10 || cy < 0 || cy >= 10) continue;
+          if (cx < 0 || cx >= MAP_W || cy < 0 || cy >= MAP_H) continue;
           if (visited[cy][cx]) continue;
           if (conflictCells.has(`${cx},${cy}`)) continue;
 
@@ -568,8 +563,11 @@ const INIT_CITY_BUILDINGS = () => {
     const n = INIT_HOUSING_COUNT[c.id] || 1;
     const h1 = FUNC_BUILDINGS.find(f => f.id === 'housing1');
     const blds = [];
+    let popLeft = INIT_POP['粗浅'];
     for (let i = 0; i < n; i++) {
-      blds.push({ ...h1, residents: h1.housing });
+      const residents = Math.max(0, Math.min(h1.housing, popLeft));
+      popLeft -= residents;
+      blds.push({ ...h1, residents });
     }
     out[c.id] = blds;
   }
@@ -614,7 +612,7 @@ export default function Demo() {
       y: hoverCell.y + dy - centerY,
       terrain: selectedCard.terrains[i],
     })).filter(c =>
-      c.x >= 0 && c.x < 10 && c.y >= 0 && c.y < 10 &&
+      c.x >= 0 && c.x < MAP_W && c.y >= 0 && c.y < MAP_H &&
       !CITIES.some(city => city.x === c.x && city.y === c.y)
     );
   }, [selectedCard, hoverCell, rotation]);
@@ -897,7 +895,7 @@ export default function Demo() {
   const [extendMode, setExtendMode] = useState(false);
   const [extendCityId, setExtendCityId] = useState('A');
   const [extendPending, setExtendPending] = useState([]);
-  const [freeChanges, setFreeChanges] = useState(3);
+  const [freeChanges, setFreeChanges] = useState(1);
   const [freeChangeMode, setFreeChangeMode] = useState(false);
   const [freeChangePicking, setFreeChangePicking] = useState(null);
   const [rerollsLeft, setRerollsLeft] = useState(2);
@@ -1113,7 +1111,7 @@ export default function Demo() {
     setSelectedCardId(null);
     setRerollSelected(new Set());
     setRerollsLeft(2);
-    setFreeChanges(3); setFreeChangeMode(false); setFreeChangePicking(null);
+    setFreeChanges(1); setFreeChangeMode(false); setFreeChangePicking(null);
     addLog(`🌍 世界改变（消耗 ${MANA_PER_BATCH} 神力 · 弃旧批抽新批 · 改造/重抽回满）`);
   };
 
@@ -1318,7 +1316,7 @@ export default function Demo() {
               setUpgradeMode(false);
               setActiveRegion(null);
               setUpgradeSelections([]);
-              setFreeChanges(3);
+              setFreeChanges(1);
               setFreeChangeMode(false);
               setFreeChangePicking(null);
               setRerollsLeft(2);
@@ -1449,7 +1447,7 @@ export default function Demo() {
                 <p><b style={{ color:'#c9a961' }}>产能档</b>——</p>
                 <ul style={{ marginLeft:20, marginTop:4 }}>
                   <li>地形值 ≥ 需求 → <span style={{ color:'#7a9a4f', fontWeight:600 }}>100% 产能</span></li>
-                  <li>地形值 &gt; 0 但 &lt; 需求 → <span style={{ color:'#c9a961', fontWeight:600 }}>25% 产能（减产）</span></li>
+                  <li>地形值 &gt; 0 但 &lt; 需求 → <span style={{ color:'#c9a961', fontWeight:600 }}>25% 产能</span></li>
                   <li>地形值 = 0 → <span style={{ color:'#c25a3a', fontWeight:600 }}>停产</span></li>
                 </ul>
                 <p><b>同种地形被多座建筑共享</b>——2 座农田都要"平原 3"，城里只有 5 格平原，则每座分到 2.5 格（平均）。</p>
@@ -1664,10 +1662,24 @@ export default function Demo() {
                             const k = terrainKeyOf(activeRegion.line, tr);
                             return `${activeRegion.tierCounts[tr]} ${k ? TERRAIN[k].name : ''}`;
                           }).join(' + ')
-                        }）· 上限 {activeRegion.maxUpgrades}
+                        }）
                       </div>
+                      {(() => {
+                        const l2Key = terrainKeyOf(activeRegion.line, 2);
+                        const l3Key = terrainKeyOf(activeRegion.line, 3);
+                        const l2Max = Math.floor(activeRegion.totalSize / 3);
+                        const l2Used = activeRegion.tierCounts[2] + activeRegion.tierCounts[3];
+                        const l3Max = Math.floor(activeRegion.totalSize / 9);
+                        const l3Used = activeRegion.tierCounts[3];
+                        return (
+                          <div style={{ fontSize: 14, color: '#9c8f72', marginBottom: 4 }}>
+                            可升级<span style={{ color: '#c9a961' }}>{l2Key ? TERRAIN[l2Key].name : ''}</span> {l2Used}/{l2Max}
+                            {l3Max > 0 && <> · 可升级<span style={{ color: '#c9a961' }}>{l3Key ? TERRAIN[l3Key].name : ''}</span> {l3Used}/{l3Max}</>}
+                          </div>
+                        );
+                      })()}
                       <div style={{ fontSize: 16, color: '#9c8f72', marginBottom: 6 }}>
-                        可升 <span style={{ color: '#c9a961' }}>{activeRegion.canUpgrade}</span> 格 · 已选 <span style={{ color: '#7a9a4f' }}>{upgradeSelections.length}</span>
+                        本次可升 <span style={{ color: '#c9a961' }}>{activeRegion.canUpgrade}</span> 格 · 已选 <span style={{ color: '#7a9a4f' }}>{upgradeSelections.length}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={handleConfirmUpgrade} disabled={upgradeSelections.length === 0}
@@ -1797,9 +1809,9 @@ export default function Demo() {
               </div>
             )}
             <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 2, width: '100%', maxWidth: 'calc(100vh - 200px)', aspectRatio: '1' }}>
-                {Array.from({ length: 10 }).map((_, y) =>
-                  Array.from({ length: 10 }).map((_, x) => {
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_W}, 1fr)`, gap: 2, width: '100%', maxWidth: 'calc(100vh - 200px)', aspectRatio: `${MAP_W} / ${MAP_H}` }}>
+                {Array.from({ length: MAP_H }).map((_, y) =>
+                  Array.from({ length: MAP_W }).map((_, x) => {
                     const terrain = map[y][x];
                     const t = TERRAIN[terrain];
                     const isPreview = previewCells.some(c => c.x === x && c.y === y);
@@ -1858,7 +1870,15 @@ export default function Demo() {
                           const k = terrainKeyOf(r.line, tr);
                           return `${r.tierCounts[tr]}${k ? TERRAIN[k].name : ''}`;
                         });
-                        tooltip += `\n所在区域：共${r.totalSize}格（${parts.join('+')}）· 上限${r.maxUpgrades}·可升${r.canUpgrade}`;
+                        const l2Key = terrainKeyOf(r.line, 2);
+                        const l3Key = terrainKeyOf(r.line, 3);
+                        const l2Max = Math.floor(r.totalSize / 3);
+                        const l2Used = r.tierCounts[2] + r.tierCounts[3];
+                        const l3Max = Math.floor(r.totalSize / 9);
+                        const l3Used = r.tierCounts[3];
+                        tooltip += `\n所在区域共${r.totalSize}格（${parts.join('+')}）`;
+                        tooltip += `\n可升级${l2Key ? TERRAIN[l2Key].name : ''} ${l2Used}/${l2Max}`;
+                        if (l3Max > 0) tooltip += ` · 可升级${l3Key ? TERRAIN[l3Key].name : ''} ${l3Used}/${l3Max}`;
                       }
                       if (hasConflict) tooltip += '\n⚡ 气候冲突：与相邻地形气候差≥2档，不计入相连（断开）';
                     }
@@ -1874,11 +1894,15 @@ export default function Demo() {
                           if (selectedCard) setRotation((rotation + 1) % 4);
                         }}
                         onClick={() => {
+                          // 有手牌且预览有效时，优先放置（即使点在城市格上，城市格本身会被自动跳过）
+                          if (selectedCard && canPlace && !extendMode && !upgradeMode && !freeChangeMode) {
+                            handlePlace();
+                            return;
+                          }
                           if (city) { setSelectedCityId(city.id); return; }
                           if (extendMode) handleExtendCell(x, y);
                           else if (upgradeMode) handleUpgradeClick(x, y);
                           else if (freeChangeMode && freeChanges > 0) handleFreeChangeClick(x, y);
-                          else if (canPlace) handlePlace();
                         }}
                         style={{
                           background: isPreview ? TERRAIN[prev].color : t.color,
@@ -2078,7 +2102,7 @@ export default function Demo() {
                                   return <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>⏸停工{extra}</span>;
                                 })()}
                                 {!b.disabled && b.halted && <span style={{ background:'#d4a85a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>⚠停产·原料</span>}
-                                {!b.disabled && !b.halted && stat === 'debuff25' && <span style={{ background:'#c9a961', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>🟡减产25%</span>}
+                                {!b.disabled && !b.halted && stat === 'debuff25' && <span style={{ background:'#c9a961', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>🟡产能25%</span>}
                                 {!b.disabled && !b.halted && stat === 'stopped' && <span style={{ background:'#c25a3a', color:'#1a1812', padding:'1px 5px', fontSize:11, fontWeight:700 }}>✗停产·地形</span>}
                                 {isHouse && <span style={{ color: '#9c8f72', fontSize: 13 }}>{b.residents || 0}/{b.housing}{b.housingTier}</span>}
                               </div>
@@ -2096,7 +2120,7 @@ export default function Demo() {
                               {/* 地形需求 / 占人口 一排 */}
                               {(b.terrain && share != null) || (b.tier && !b.housing) ? (
                                 <div style={{ fontSize: 13, display:'flex', gap:8, flexWrap:'wrap' }}>
-                                  {b.terrain && share != null && <span style={{ color:'#7a6e5a' }}><span style={{ color:'#5a5140' }}>地形需求</span> {TERRAIN[b.terrain].name} {b.need} <span style={{ color: stat === 'ok' ? '#7a9a4f' : stat === 'debuff25' ? '#c9a961' : '#c25a3a' }}>当前{share.toFixed(1)}</span></span>}
+                                  {b.terrain && share != null && <span style={{ color:'#7a6e5a' }}><span style={{ color:'#5a5140' }}>地形需求</span> <span style={{ color:'#c9a961', fontWeight:600 }}>{TERRAIN[b.terrain].name} {b.need}</span> <span style={{ color: stat === 'ok' ? '#7a9a4f' : stat === 'debuff25' ? '#c9a961' : '#c25a3a' }}>当前{share.toFixed(1)}{(stat === 'debuff25' || stat === 'stopped') ? ' · 地形值不足' : ''}</span></span>}
                                   {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占人口</span> {b.popCost}{b.tier}</span>}
                                 </div>
                               ) : null}
@@ -2142,7 +2166,7 @@ export default function Demo() {
                         const share = total / sameCount;
                         const rate = productionRate(share, b.need);
                         const col = rate === 1 ? '#7a9a4f' : rate === 0.25 ? '#c9a961' : '#c25a3a';
-                        preview = <span style={{ color: col, fontSize: 12 }}>当前{share.toFixed(1)} 效率{Math.round(rate*100)}%</span>;
+                        preview = <span style={{ color: col, fontSize: 12 }}>产能{Math.round(rate*100)}% 当前{share.toFixed(1)}{rate < 1 ? ' · 地形值不足' : ''}</span>;
                       }
                       return (
                         <div key={b.id} style={{ padding: '6px 8px', background: '#1a1812', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', opacity: resOk ? 1 : 0.5, borderLeft: `3px solid ${LEVEL_COLOR[b.tier] || '#5a5140'}`, minHeight: 76 }}>
@@ -2158,7 +2182,7 @@ export default function Demo() {
                             {!b.output && b.effect && <div style={{ fontSize: 13, color: '#9c8f72' }}>{b.effect}</div>}
                             {/* 地形需求 */}
                             {b.terrain && <div style={{ fontSize: 13, color: LEVEL_COLOR[b.tier] }}>
-                              <span style={{ color:'#5a5140' }}>地形需求</span> {TERRAIN[b.terrain].name} {b.need}
+                              <span style={{ color:'#5a5140' }}>地形需求</span> <span style={{ color:'#c9a961', fontWeight:600 }}>{TERRAIN[b.terrain].name} {b.need}</span>
                               {preview && <span style={{ marginLeft: 4 }}>{preview}</span>}
                             </div>}
                             {!b.terrain && b.tier && b.output && <div style={{ fontSize: 13, color:'#5a5140' }}>加工·无地形</div>}
