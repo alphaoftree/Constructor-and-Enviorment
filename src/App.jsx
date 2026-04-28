@@ -1083,7 +1083,8 @@ export default function Demo() {
           const oldH = newHappy[city.id][tier];
           newHappy[city.id][tier] = Math.max(0, oldH - HAPPY_DOWN);
           if (oldH - newHappy[city.id][tier] > 0) popMsg += ` ${city.name}${tier}幸福-${oldH - newHappy[city.id][tier]}`;
-          if (newHappy[city.id][tier] === 0 && total > 0) {
+          // 上回合末已经是 0 → 这回合开始扣人；如果是这回合刚跌到 0，下回合再扣
+          if (oldH === 0 && total > 0) {
             let toRemove = Math.min(POP_DECLINE, total);
             const fromH = Math.min(Math.ceil(toRemove / 2), homelessN);
             newHomeless[city.id][tier] -= fromH;
