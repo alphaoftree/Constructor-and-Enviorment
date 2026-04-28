@@ -294,7 +294,7 @@ const SHAPES = {
 // 卡片生成
 const SHAPE_KEYS = Object.keys(SHAPES);
 const BASE_TERRAINS = ['plain', 'forest', 'hill', 'grass', 'marsh', 'tundra'];
-const HAND_SIZE = 3;
+const HAND_SIZE = 5;
 
 let cardCounter = Date.now();
 const generateCard = () => {
