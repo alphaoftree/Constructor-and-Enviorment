@@ -50,16 +50,17 @@ const LEVEL_COLOR = {
   深刻: '#b07a9a',  // 烟紫
 };
 
-const MAP_W = 10;
-const MAP_H = 12;
+const MAP_W = 16;
+const MAP_H = 11;
 
+// 钻石布局（仿 CitySim WorldMapView），左右各留1列
 const CITIES = [
-  { id: 'A', name: '粮木城', x: 2, y: 2 },
-  { id: 'B', name: '药木城', x: 8, y: 2 },
-  { id: 'C', name: '铁工城', x: 2, y: 6 },
-  { id: 'D', name: '云港城', x: 8, y: 6 },
-  { id: 'E', name: '灰谷城', x: 2, y: 10 },
-  { id: 'F', name: '碧潮城', x: 8, y: 10 },
+  { id: 'A', name: '粮木城', x: 10, y: 2 },
+  { id: 'B', name: '药木城', x: 5,  y: 2 },
+  { id: 'C', name: '铁工城', x: 2,  y: 5 },
+  { id: 'D', name: '云港城', x: 10, y: 8 },
+  { id: 'E', name: '灰谷城', x: 5,  y: 8 },
+  { id: 'F', name: '碧潮城', x: 13, y: 5 },
 ];
 
 const getCityArea = (city) => {
@@ -380,16 +381,18 @@ const getClimateConflicts = (map) => {
   const conflicts = [];
   const citySet = new Set(CITIES.map(c => `${c.x},${c.y}`));
   for (let y = 0; y < MAP_H; y++) {
+    if (!map[y]) continue;
     for (let x = 0; x < MAP_W; x++) {
       if (citySet.has(`${x},${y}`)) continue;
       const t = TERRAIN[map[y][x]];
-      if (t.climate === 0) continue;
+      if (!t || t.climate === 0) continue;
       for (const [dx, dy] of [[1,0],[0,1]]) {
         const nx = x + dx, ny = y + dy;
         if (nx >= MAP_W || ny >= MAP_H) continue;
         if (citySet.has(`${nx},${ny}`)) continue;
+        if (!map[ny]) continue;
         const nt = TERRAIN[map[ny][nx]];
-        if (nt.climate === 0) continue;
+        if (!nt || nt.climate === 0) continue;
         if (Math.abs(t.climate - nt.climate) >= 2) conflicts.push({ x, y, nx, ny });
       }
     }
@@ -405,16 +408,18 @@ const findUpgradableRegions = (map) => {
   const conflictCells = new Set();
   const citySet = new Set(CITIES.map(c => `${c.x},${c.y}`));
   for (let y = 0; y < MAP_H; y++) {
+    if (!map[y]) continue;
     for (let x = 0; x < MAP_W; x++) {
       if (citySet.has(`${x},${y}`)) continue;
       const t = TERRAIN[map[y][x]];
-      if (t.climate === 0) continue;
+      if (!t || t.climate === 0) continue;
       for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || nx >= MAP_W || ny < 0 || ny >= MAP_H) continue;
         if (citySet.has(`${nx},${ny}`)) continue;
+        if (!map[ny]) continue;
         const nt = TERRAIN[map[ny][nx]];
-        if (nt.climate === 0) continue;
+        if (!nt || nt.climate === 0) continue;
         if (Math.abs(t.climate - nt.climate) >= 2) {
           conflictCells.add(`${x},${y}`);
           break;
@@ -579,6 +584,13 @@ const INIT_HOMELESS = () => Object.fromEntries(CITIES.map(c => [c.id, { 粗浅: 
 
 export default function Demo() {
   const [map, setMap] = useState(makeInitialMap);
+  // 地图尺寸变化时（HMR 后状态不匹配新 MAP_W/MAP_H）自动重建
+  useEffect(() => {
+    if (!map || map.length !== MAP_H || !map[0] || map[0].length !== MAP_W) {
+      setMap(makeInitialMap());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [mapHistory, setMapHistory] = useState([]);
   const [hand, setHand] = useState(() => []);
   const [selectedCardId, setSelectedCardId] = useState(null);
@@ -1808,8 +1820,8 @@ export default function Demo() {
                 <button onClick={() => { setExtendMode(false); setExtendPending([]); }} style={{ ...btn(false), padding:'3px 10px', fontSize:12, background:'#1a1812', color:'#e8dfc8' }}>取消</button>
               </div>
             )}
-            <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_W}, 1fr)`, gap: 2, width: '100%', maxWidth: 'calc(100vh - 200px)', aspectRatio: `${MAP_W} / ${MAP_H}` }}>
+            <div style={{ ...panel, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '6vh', position: 'relative' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_W}, 1fr)`, gap: 2, width: '100%', maxWidth: 'min(calc(100vh - 200px), 92vw)', aspectRatio: `${MAP_W} / ${MAP_H}` }}>
                 {Array.from({ length: MAP_H }).map((_, y) =>
                   Array.from({ length: MAP_W }).map((_, x) => {
                     const terrain = map[y][x];
