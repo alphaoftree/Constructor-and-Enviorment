@@ -637,6 +637,7 @@ export default function Demo() {
     map, buildings: cityBuildings, extensions: cityExtensions,
     resources, population, happiness, homeless,
     research, unlocked: new Set(unlockedBlds), hand, mana,
+    freeChanges, rerollsLeft,
   });
 
   const handlePlace = () => {
@@ -666,6 +667,8 @@ export default function Demo() {
     if (last.unlocked) setUnlockedBlds(last.unlocked);
     if (last.hand) setHand(last.hand);
     if (typeof last.mana === 'number') setMana(last.mana);
+    if (typeof last.freeChanges === 'number') setFreeChanges(last.freeChanges);
+    if (typeof last.rerollsLeft === 'number') setRerollsLeft(last.rerollsLeft);
     setMapHistory(mapHistory.slice(0, -1));
     addLog('↶ 撤回');
   };
@@ -907,10 +910,10 @@ export default function Demo() {
   const [extendMode, setExtendMode] = useState(false);
   const [extendCityId, setExtendCityId] = useState('A');
   const [extendPending, setExtendPending] = useState([]);
-  const [freeChanges, setFreeChanges] = useState(1);
+  const [freeChanges, setFreeChanges] = useState(2);
   const [freeChangeMode, setFreeChangeMode] = useState(false);
   const [freeChangePicking, setFreeChangePicking] = useState(null);
-  const [rerollsLeft, setRerollsLeft] = useState(2);
+  const [rerollsLeft, setRerollsLeft] = useState(3);
   const [rerollSelected, setRerollSelected] = useState(new Set());
   const [activeRegion, setActiveRegion] = useState(null);
   const [upgradeSelections, setUpgradeSelections] = useState([]);
@@ -1041,18 +1044,18 @@ export default function Demo() {
         const count = newPop[city.id][tier];
         const homelessN = newHomeless[city.id][tier];
         const total = count + homelessN;
-        if (total === 0) continue;
         let resMet = true;
-        for (const [r, a] of Object.entries(POP_NEEDS[tier])) {
-          if ((newRes[r] || 0) < a * total) { resMet = false; break; }
-        }
-        // 扣资源
-        if (resMet) {
-          for (const [r, a] of Object.entries(POP_NEEDS[tier])) newRes[r] -= a * total;
-        } else {
+        if (total > 0) {
           for (const [r, a] of Object.entries(POP_NEEDS[tier])) {
-            const want = a * total;
-            newRes[r] = Math.max(0, (newRes[r] || 0) - Math.min(newRes[r] || 0, want));
+            if ((newRes[r] || 0) < a * total) { resMet = false; break; }
+          }
+          if (resMet) {
+            for (const [r, a] of Object.entries(POP_NEEDS[tier])) newRes[r] -= a * total;
+          } else {
+            for (const [r, a] of Object.entries(POP_NEEDS[tier])) {
+              const want = a * total;
+              newRes[r] = Math.max(0, (newRes[r] || 0) - Math.min(newRes[r] || 0, want));
+            }
           }
         }
         const hasHomeless = homelessN > 0;
@@ -1122,8 +1125,8 @@ export default function Demo() {
     setHand(generateHand());
     setSelectedCardId(null);
     setRerollSelected(new Set());
-    setRerollsLeft(2);
-    setFreeChanges(1); setFreeChangeMode(false); setFreeChangePicking(null);
+    setRerollsLeft(3);
+    setFreeChanges(2); setFreeChangeMode(false); setFreeChangePicking(null);
     addLog(`🌍 世界改变（消耗 ${MANA_PER_BATCH} 神力 · 弃旧批抽新批 · 改造/重抽回满）`);
   };
 
@@ -1328,10 +1331,10 @@ export default function Demo() {
               setUpgradeMode(false);
               setActiveRegion(null);
               setUpgradeSelections([]);
-              setFreeChanges(1);
+              setFreeChanges(2);
               setFreeChangeMode(false);
               setFreeChangePicking(null);
-              setRerollsLeft(2);
+              setRerollsLeft(3);
               setRerollSelected(new Set());
               setHoverCell(null);
               setExtendMode(false);
@@ -1355,7 +1358,7 @@ export default function Demo() {
                 return (
                   <div key={k}>
                     <span style={{ color: '#9c8f72', marginRight: 3 }}>{RES_ICON[k]}{k}</span>
-                    <span style={{ color: v <= 0 ? '#c25a3a' : '#c9a961', fontWeight: 600 }}>{Math.round(v)}</span>
+                    <span style={{ color: v <= 0 ? '#c25a3a' : '#c9a961', fontWeight: 600 }}>{v.toFixed(1)}</span>
                     <span style={{ marginLeft: 3, fontSize: 15, color: delta > 0 ? '#7a9a4f' : delta < 0 ? '#c25a3a' : '#5a5140' }}>
                       ({deltaStr})
                     </span>
@@ -1505,14 +1508,19 @@ export default function Demo() {
                     const stock = resources[r] || 0;
                     const sold = shopSell[r] || 0;
                     const avail = stock - sold;
+                    const miniBtn = { padding:'1px 6px', fontSize:13, background:'#3d3524', color:'#c9a961', border:'1px solid #5a5140', cursor:'pointer', fontFamily:'inherit' };
                     return (
-                      <button key={r} disabled={avail <= 0} onClick={() => setShopSell(s => ({ ...s, [r]: (s[r]||0) + 1 }))} style={{ display:'block', width:'100%', textAlign:'left', padding:'6px 8px', marginBottom:3, background:'#242017', color: avail > 0 ? '#e8dfc8' : '#5a5140', border:'1px solid #3d3524', cursor: avail > 0 ? 'pointer' : 'not-allowed', fontFamily:'inherit', fontSize:15 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between' }}>
+                      <div key={r} onClick={() => avail > 0 && setShopSell(s => ({ ...s, [r]: (s[r]||0) + 1 }))} style={{ padding:'6px 8px', marginBottom:3, background:'#242017', color: avail > 0 ? '#e8dfc8' : '#5a5140', border:'1px solid #3d3524', cursor: avail > 0 ? 'pointer' : 'not-allowed', fontSize:15 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:6 }}>
                           <span>{RES_ICON[r]} {r}</span>
-                          <span><span style={{ color:'#7a9a4f' }}>{Math.floor(avail)}</span><span style={{ color:'#5a5140' }}>/{Math.floor(stock)}</span></span>
+                          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                            <button disabled={sold < 10} onClick={(e) => { e.stopPropagation(); setShopSell(s => ({ ...s, [r]: Math.max(0, (s[r]||0) - 10) })); }} style={{ ...miniBtn, opacity: sold < 10 ? 0.4 : 1, cursor: sold < 10 ? 'not-allowed' : 'pointer' }}>-10</button>
+                            <button disabled={avail < 10} onClick={(e) => { e.stopPropagation(); setShopSell(s => ({ ...s, [r]: (s[r]||0) + 10 })); }} style={{ ...miniBtn, opacity: avail < 10 ? 0.4 : 1, cursor: avail < 10 ? 'not-allowed' : 'pointer' }}>+10</button>
+                            <span><span style={{ color:'#7a9a4f' }}>{Math.floor(avail)}</span><span style={{ color:'#5a5140' }}>/{Math.floor(stock)}</span></span>
+                          </div>
                         </div>
                         <div style={{ fontSize:13, color:'#9c8f72' }}>价值: {SHOP_VALUES[r]}</div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -1546,12 +1554,23 @@ export default function Demo() {
                 {/* 右：商品 */}
                 <div style={{ background:'#1a1812', padding:10, border:'1px solid #3d3524', overflow:'auto' }}>
                   <div style={{ color:'#7a9ab5', fontWeight:600, marginBottom:6, fontSize:17 }}>🛒 可购买</div>
-                  {RES_KEYS.filter(r => !SHOP_NO_BUY.includes(r)).map(r => (
-                    <button key={r} onClick={() => setShopBuy(s => ({ ...s, [r]: (s[r]||0) + 1 }))} style={{ display:'block', width:'100%', textAlign:'left', padding:'6px 8px', marginBottom:3, background:'#242017', color:'#e8dfc8', border:'1px solid #3d3524', cursor:'pointer', fontFamily:'inherit', fontSize:15 }}>
-                      <div>{RES_ICON[r]} {r}</div>
+                  {RES_KEYS.filter(r => !SHOP_NO_BUY.includes(r)).map(r => {
+                    const inCart = shopBuy[r] || 0;
+                    const miniBtn = { padding:'1px 6px', fontSize:13, background:'#3d3524', color:'#7a9ab5', border:'1px solid #5a5140', cursor:'pointer', fontFamily:'inherit' };
+                    return (
+                    <div key={r} onClick={() => setShopBuy(s => ({ ...s, [r]: (s[r]||0) + 1 }))} style={{ padding:'6px 8px', marginBottom:3, background:'#242017', color:'#e8dfc8', border:'1px solid #3d3524', cursor:'pointer', fontSize:15 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:6 }}>
+                        <span>{RES_ICON[r]} {r}</span>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          <button disabled={inCart < 10} onClick={(e) => { e.stopPropagation(); setShopBuy(s => ({ ...s, [r]: Math.max(0, (s[r]||0) - 10) })); }} style={{ ...miniBtn, opacity: inCart < 10 ? 0.4 : 1, cursor: inCart < 10 ? 'not-allowed' : 'pointer' }}>-10</button>
+                          <button onClick={(e) => { e.stopPropagation(); setShopBuy(s => ({ ...s, [r]: (s[r]||0) + 10 })); }} style={miniBtn}>+10</button>
+                          {inCart > 0 && <span style={{ color:'#7a9ab5' }}>×{inCart}</span>}
+                        </div>
+                      </div>
                       <div style={{ fontSize:13, color:'#9c8f72' }}>买价: {(SHOP_VALUES[r]*4).toFixed(1)}</div>
-                    </button>
-                  ))}
+                    </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1790,7 +1809,7 @@ export default function Demo() {
                         color: rerollsLeft <= 0 ? '#5a5140' : primaryBtn.color,
                         cursor: rerollsLeft <= 0 ? 'not-allowed' : 'pointer',
                       }}>
-                      重抽{rerollSelected.size}张（{rerollsLeft}/2）
+                      重抽{rerollSelected.size}张（{rerollsLeft}/3）
                     </button>
                   )}
                 </div>
@@ -1841,8 +1860,10 @@ export default function Demo() {
                     const isUpgradeSelection = upgradeSelections.some(([cx,cy]) => cx === x && cy === y);
                     const canUpgradeHere = upgradeMode && !city && regionMap[`${x},${y}`] !== undefined;
 
+                    const isFreeChangePick = freeChangeMode && freeChangePicking && freeChangePicking.x === x && freeChangePicking.y === y;
                     let borderStyle;
-                    if (city) borderStyle = '2px solid #c9a961';
+                    if (isFreeChangePick) borderStyle = '3px solid #c9a961';
+                    else if (city) borderStyle = '2px solid #c9a961';
                     else if (isExtendPending) borderStyle = '3px solid #7a9ab5';
                     else if (isUpgradeSelection) borderStyle = '3px solid #7a9a4f';
                     else if (inActiveRegion) borderStyle = '2px solid #e8dfc8';
@@ -2136,6 +2157,22 @@ export default function Demo() {
                                   {b.tier && !b.housing && <span style={{ color: LEVEL_COLOR[b.tier] }}><span style={{ color:'#5a5140' }}>占人口</span> {b.popCost}{b.tier}</span>}
                                 </div>
                               ) : null}
+                              {/* 住房升级成本 */}
+                              {isHouse && b.housingTier && TIER_ORDER.indexOf(b.housingTier) < 2 && (() => {
+                                const nextTier = TIER_ORDER[TIER_ORDER.indexOf(b.housingTier) + 1];
+                                const nextDef = FUNC_BUILDINGS.find(f => f.housingTier === nextTier);
+                                if (!nextDef || !nextDef.cost) return null;
+                                return (
+                                  <>
+                                    <div style={{ fontSize: 13, color:'#5a5140' }}>升级到{nextTier}所需</div>
+                                    <div style={{ fontSize: 13, display:'flex', gap:6, flexWrap:'wrap' }}>
+                                      {Object.entries(nextDef.cost).map(([r, a]) => (
+                                        <span key={r} style={{ color: (resources[r] || 0) >= a ? '#9c8f72' : '#c25a3a' }}>{RES_ICON[r]}{a}</span>
+                                      ))}
+                                    </div>
+                                  </>
+                                );
+                              })()}
                             </div>
                             <div style={{ display:'flex', flexDirection:'column', gap:2, flexShrink:0 }}>
                               {canUpgrade && <button onClick={() => handleUpgradeHousing(cityId, i)} style={{ ...btn(false), padding:'1px 6px', fontSize:11, color:'#7a9ab5' }}>⬆升级</button>}
