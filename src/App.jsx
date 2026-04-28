@@ -1057,6 +1057,11 @@ export default function Demo() {
               newRes[r] = Math.max(0, (newRes[r] || 0) - Math.min(newRes[r] || 0, want));
             }
           }
+        } else {
+          // 人口为 0：空住房想长人需要每种需求资源都够1人份，否则视作不满足
+          for (const [r, a] of Object.entries(POP_NEEDS[tier])) {
+            if ((newRes[r] || 0) < a) { resMet = false; break; }
+          }
         }
         const hasHomeless = homelessN > 0;
         const needsMet = resMet && !hasHomeless;
@@ -1351,7 +1356,7 @@ export default function Demo() {
             <button onClick={() => setShowTech(true)} style={{ ...btn(false), fontSize: 14, background: '#7a9ab5', color: '#1a1812' }}>🔬 科技树 {research}</button>
             <span style={{ color:'#7a9ab5', fontSize: 15 }}>研究 <span style={{ color:'#7a9a4f', fontWeight:600 }}>+{researchPerTurn}</span>/回合</span>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 17, flex: 1 }}>
-              {RES_KEYS.filter(k => (resources[k] || 0) > 0 || (netChange[k] || 0) !== 0).map(k => {
+              {RES_KEYS.filter(k => k !== '宝石' && k !== '古董').map(k => {
                 const v = resources[k] || 0;
                 const delta = netChange[k] || 0;
                 const deltaStr = delta > 0 ? '+' + (Math.round(delta * 10) / 10) : (Math.round(delta * 10) / 10);
