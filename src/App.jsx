@@ -1500,7 +1500,7 @@ export default function Demo() {
 
         {showShop && (
           <div style={{ position:'fixed', inset:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.7)' }} onClick={() => { setShowShop(false); setShopSell({}); setShopBuy({}); }}>
-            <div style={{ background:'#242017', border:'1px solid #3d3524', padding:20, width:'90%', maxWidth:1100, maxHeight:'85vh', display:'flex', flexDirection:'column', gap:12 }} onClick={e => e.stopPropagation()}>
+            <div style={{ background:'#242017', border:'1px solid #3d3524', padding:20, width:'90%', maxWidth:1100, height:'92vh', display:'flex', flexDirection:'column', gap:12 }} onClick={e => e.stopPropagation()}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ color:'#c9a961', fontSize:22, fontWeight:600 }}>🏪 资源交易所</span>
                 <button onClick={() => { setShowShop(false); setShopSell({}); setShopBuy({}); }} style={{ ...btn(false), padding:'4px 12px', background:'#c25a3a', color:'#e8dfc8' }}>关闭</button>
@@ -1535,7 +1535,7 @@ export default function Demo() {
                   <div style={{ color:'#b07a9a', fontWeight:600, marginBottom:6, fontSize:17, textAlign:'center' }}>⚖️ 交易区</div>
                   <div style={{ flex:1, overflow:'auto', marginBottom:8 }}>
                     <div style={{ fontSize:14, color:'#c9a961', marginBottom:4 }}>📤 待售 (价值: {shopValueSell.toFixed(1)})</div>
-                    <div style={{ minHeight:80, background:'#141008', padding:6, marginBottom:8 }}>
+                    <div style={{ minHeight:200, background:'#141008', padding:6, marginBottom:120 }}>
                       {Object.entries(shopSell).filter(([,a]) => a > 0).map(([k, a]) => (
                         <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'4px 6px', background:'#242017', marginBottom:2, fontSize:14 }}>
                           <span>{RES_ICON[k]} {k} ×{a}</span>
@@ -1544,7 +1544,7 @@ export default function Demo() {
                       ))}
                     </div>
                     <div style={{ fontSize:14, color:'#7a9ab5', marginBottom:4 }}>📥 待购 (价值: {shopValueBuy.toFixed(1)})</div>
-                    <div style={{ minHeight:80, background:'#141008', padding:6 }}>
+                    <div style={{ minHeight:200, background:'#141008', padding:6 }}>
                       {Object.entries(shopBuy).filter(([,a]) => a > 0).map(([k, a]) => (
                         <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'4px 6px', background:'#242017', marginBottom:2, fontSize:14 }}>
                           <span>{RES_ICON[k]} {k} ×{a}</span>
